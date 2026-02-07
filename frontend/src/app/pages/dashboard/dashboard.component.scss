@@ -1,0 +1,285 @@
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+
+    // Semantic Classes for Dashboard Layout
+    .dashboard-view {
+        padding: 2rem;
+        max-width: 1800px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        display: block;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 2rem;
+
+        @media (min-width: 1024px) {
+            grid-template-columns: repeat(12, minmax(0, 1fr));
+        }
+    }
+
+    .main-area-col {
+        grid-column: 1 / -1;
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+    }
+
+    .main-data-card {
+        border-radius: 3rem !important;
+        box-shadow: 0 25px 50px -12px rgba(226, 232, 240, 0.4) !important;
+        border: none !important;
+        background: white;
+        overflow: hidden; // Back to hidden to clip the table
+        display: flex;
+        flex-direction: column;
+        width: fit-content; // Shrink card to its content
+        min-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .table-scroll-wrapper {
+        overflow-x: auto;
+        max-width: 100%;
+        min-height: 500px;
+        position: relative;
+    }
+
+    .table-header-custom {
+        padding: 1.5rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #f8fafc;
+        width: 100%;
+    }
+
+
+    .sidenav-form-panel {
+        width: 100% !important;
+        border: none !important;
+        border-top-left-radius: 3rem !important;
+        border-bottom-left-radius: 3rem !important;
+        background-color: white !important;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+
+        @media (min-width: 768px) {
+            width: 500px !important;
+        }
+    }
+
+    .form-container {
+        padding: 3rem;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-header-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        background-color: #4f46e5;
+        border-radius: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.1);
+        transform: rotate(3deg);
+    }
+
+    // Material and Table Specific overrides
+    mat-sidenav-container {
+        flex: 1;
+        background: transparent;
+    }
+
+    mat-sidenav-content {
+        height: 100%;
+        overflow-y: auto !important;
+    }
+
+    .header-filters-table {
+        background: white !important;
+        width: 100%;
+        border-collapse: collapse;
+
+        th.mat-mdc-header-cell,
+        td.mat-mdc-cell,
+        td.mat-mdc-footer-cell {
+            padding: 0 16px !important;
+            vertical-align: middle;
+        }
+
+        th.mat-mdc-header-cell {
+            vertical-align: top;
+            padding-top: 16px !important;
+
+            &.text-right {
+                text-align: right !important;
+            }
+
+            &.text-center {
+                text-align: center !important;
+            }
+        }
+
+        // Column Specific Widths - Force all to be as compact as possible
+        .mat-column-date,
+        .mat-column-taxpayer,
+        .mat-column-source,
+        .mat-column-type,
+        .mat-column-is_taxable,
+        .mat-column-amount,
+        .mat-column-actions {
+            width: 1% !important;
+            white-space: nowrap !important;
+        }
+
+        .mat-column-amount {
+            text-align: right !important;
+            padding-right: 24px !important;
+        }
+
+        .header-cell-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 12px 0;
+            width: 100%;
+
+            .header-label {
+                font-weight: 900;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: #94a3b8;
+                line-height: 1;
+            }
+
+            &.items-end {
+                align-items: flex-end;
+            }
+
+            &.items-center {
+                align-items: center;
+            }
+
+            &.items-end .header-label {
+                text-align: right;
+            }
+
+            &.items-center .header-label {
+                text-align: center;
+            }
+        }
+
+        .filter-menu-btn {
+            height: 32px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 0;
+
+            &:hover {
+                background: #f1f5f9;
+                border-color: #cbd5e1;
+            }
+
+            .header-label {
+                font-weight: 900;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #94a3b8;
+                margin: 0;
+            }
+
+            .active-filter-val {
+                font-size: 11px;
+                font-weight: 800;
+                color: #6366f1;
+            }
+        }
+    }
+
+    .compact-menu {
+        min-width: 140px !important;
+        border-radius: 16px !important;
+        overflow: hidden !important;
+        box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+
+        ::ng-deep .mat-mdc-menu-content {
+            padding: 8px !important;
+
+            .mat-mdc-menu-item {
+                border-radius: 8px;
+                margin-bottom: 2px;
+                min-height: 36px;
+                font-size: 12px;
+                font-weight: 600;
+                color: #475569;
+
+                &:hover {
+                    background: #f1f5f9;
+                }
+            }
+        }
+    }
+
+    .compact-search {
+        ::ng-deep {
+            .mat-mdc-form-field-flex {
+                height: 48px !important;
+                border-radius: 16px !important;
+                background: #f8fafc !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            .mdc-notched-outline {
+                display: none !important;
+            }
+
+            .mat-mdc-form-field-infix {
+                padding-top: 12px !important;
+            }
+        }
+    }
+
+    table {
+        background: transparent !important;
+    }
+
+    .custom-scroll {
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+
+            &:hover {
+                background: #cbd5e1;
+            }
+        }
+    }
+}

@@ -1,0 +1,352 @@
+<mat-sidenav-container class="flex-1 bg-transparent h-full">
+    <mat-sidenav-content class="dashboard-view">
+
+        <div class="dashboard-grid">
+
+            <!-- MAIN AREA -->
+            <div class="main-area-col">
+
+                <!-- DATA TABLE -->
+                <mat-card class="main-data-card">
+                    <div class="table-header-custom">
+                        <div class="flex items-center gap-3">
+                            <mat-icon class="text-indigo-600">view_list</mat-icon>
+                            <h3 class="text-lg font-black text-slate-800">İşlem Hareketleri</h3>
+                            <div class="flex items-center gap-1.5 ml-4">
+                                <span
+                                    class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">{{filteredTransactions().length}}
+                                    Kayıt</span>
+                            </div>
+                            <mat-icon class="text-indigo-600 cursor-pointer ml-3 hover:scale-110 transition-all"
+                                (click)="openAdd()" matTooltip="Yeni İşlem">add_circle</mat-icon>
+                        </div>
+                    </div>
+
+                    <div class="table-scroll-wrapper">
+                        <table mat-table [dataSource]="filteredTransactions()" class="header-filters-table">
+                            <!-- Combined Date Column -->
+                            <ng-container matColumnDef="date">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+
+                                        <div class="flex items-center gap-2">
+                                            <!-- Month Filter -->
+                                            <button mat-button [matMenuTriggerFor]="monthMenu"
+                                                class="filter-menu-btn !h-7 !px-2">
+                                                <span
+                                                    class="text-[9px] font-black uppercase mr-1 text-slate-400">AY:</span>
+                                                <span class="text-[10px] font-black text-indigo-600">{{ filters().month
+                                                    === 'all' ? 'Tümü' : (filters().month | number:'2.0-0') }}</span>
+                                                <mat-icon
+                                                    class="!text-[12px] !w-[12px] !h-[12px] ml-0.5">expand_more</mat-icon>
+                                            </button>
+                                            <!-- Year Filter -->
+                                            <button mat-button [matMenuTriggerFor]="yearMenu"
+                                                class="filter-menu-btn !h-7 !px-2">
+                                                <span
+                                                    class="text-[9px] font-black uppercase mr-1 text-slate-400">YIL:</span>
+                                                <span class="text-[10px] font-black text-indigo-600">{{ filters().year
+                                                    }}</span>
+                                                <mat-icon
+                                                    class="!text-[12px] !w-[12px] !h-[12px] ml-0.5">expand_more</mat-icon>
+                                            </button>
+
+                                            <mat-menu #monthMenu="matMenu" class="compact-menu">
+                                                <button mat-menu-item
+                                                    (click)="updateFilter('month', 'all')">Tümü</button>
+                                                <button mat-menu-item *ngFor="let m of months"
+                                                    (click)="updateFilter('month', m.code)">{{m.name}}</button>
+                                            </mat-menu>
+
+                                            <mat-menu #yearMenu="matMenu" class="compact-menu">
+                                                <button mat-menu-item *ngFor="let y of metadata().years"
+                                                    (click)="updateFilter('year', y)">{{y}}</button>
+                                            </mat-menu>
+                                        </div>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-xs font-bold text-slate-600">
+                                    <div class="flex flex-col">
+                                        <span class="font-black text-indigo-600">{{tx.transaction_date |
+                                            date:'dd.MM.yyyy'}}</span>
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <!-- Taxpayer Column -->
+                            <ng-container matColumnDef="taxpayer">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+                                        <button mat-button [matMenuTriggerFor]="tpMenu" class="filter-menu-btn">
+                                            <span class="header-label">MÜKELLEF</span>
+                                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">expand_more</mat-icon>
+                                        </button>
+                                        <mat-menu #tpMenu="matMenu" class="compact-menu">
+                                            <button mat-menu-item
+                                                (click)="updateFilter('taxpayer_id', 'all')">Tümü</button>
+                                            <button mat-menu-item *ngFor="let tp of metadata().taxpayers"
+                                                (click)="updateFilter('taxpayer_id', tp.id)">
+                                                {{tp.full_name}}
+                                            </button>
+                                        </mat-menu>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx">
+                                    <div class="flex items-center gap-2">
+                                        <div
+                                            class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-[9px] font-black text-slate-500 uppercase">
+                                            {{tx.taxpayer_name?.substring(0,2)}}
+                                        </div>
+                                        <span class="text-xs font-black text-slate-700">{{tx.taxpayer_name}}</span>
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <!-- Source Column -->
+                            <ng-container matColumnDef="source">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+                                        <button mat-button [matMenuTriggerFor]="sourceMenu" class="filter-menu-btn">
+                                            <span class="header-label">KAYNAK</span>
+                                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">expand_more</mat-icon>
+                                        </button>
+                                        <mat-menu #sourceMenu="matMenu" class="compact-menu p-2">
+                                            <div class="max-h-[300px] overflow-y-auto custom-scroll">
+                                                <div *ngFor="let s of metadata().sources" class="px-3 py-1"
+                                                    (click)="$event.stopPropagation()">
+                                                    <mat-checkbox [checked]="filters().source_id.includes(s.id)"
+                                                        (change)="toggleSourceFilter(s.id)"
+                                                        class="text-[11px] font-bold text-slate-600">
+                                                        {{s.name}}
+                                                    </mat-checkbox>
+                                                </div>
+                                            </div>
+                                        </mat-menu>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-[11px] font-bold text-slate-500">
+                                    <span class="cursor-help border-b border-dotted border-slate-300 pb-0.5"
+                                        [matTooltip]="tx.description" matTooltipPosition="above">
+                                        {{tx.source_name}}
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <!-- Type Column -->
+                            <ng-container matColumnDef="type">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+                                        <button mat-button [matMenuTriggerFor]="typeMenu" class="filter-menu-btn">
+                                            <span class="header-label">TİP</span>
+                                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">expand_more</mat-icon>
+                                        </button>
+                                        <mat-menu #typeMenu="matMenu" class="compact-menu">
+                                            <button mat-menu-item (click)="updateFilter('type', 'all')">Tümü</button>
+                                            <button mat-menu-item (click)="updateFilter('type', 1)">Gelir</button>
+                                            <button mat-menu-item (click)="updateFilter('type', -1)">Gider</button>
+                                        </mat-menu>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx">
+                                    <div [ngClass]="tx.type === 1 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'"
+                                        class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-black uppercase">
+                                        {{tx.type === 1 ? 'Gelir' : 'Gider'}}
+                                    </div>
+                                </td>
+                            </ng-container>
+
+                            <!-- Taxable Column -->
+                            <ng-container matColumnDef="is_taxable">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+                                        <button mat-button [matMenuTriggerFor]="taxMenu" class="filter-menu-btn">
+                                            <span class="header-label">BEYAN</span>
+                                            <mat-icon class="!text-[14px] !w-[14px] !h-[14px]">expand_more</mat-icon>
+                                        </button>
+                                        <mat-menu #taxMenu="matMenu" class="compact-menu">
+                                            <button mat-menu-item
+                                                (click)="updateFilter('is_taxable', 'all')">Tümü</button>
+                                            <button mat-menu-item
+                                                (click)="updateFilter('is_taxable', true)">Evet</button>
+                                            <button mat-menu-item
+                                                (click)="updateFilter('is_taxable', false)">Hayır</button>
+                                        </mat-menu>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-center">
+                                    <mat-icon class="!text-lg"
+                                        [class]="tx.is_taxable ? 'text-indigo-600' : 'text-slate-200'">
+                                        {{tx.is_taxable ? 'verified' : 'horizontal_rule'}}
+                                    </mat-icon>
+                                </td>
+                            </ng-container>
+
+                            <!-- Amount Column -->
+                            <ng-container matColumnDef="amount">
+                                <th mat-header-cell *matHeaderCellDef class="text-right">
+                                    <div class="header-cell-content items-end">
+                                        <span class="header-label">TUTAR</span>
+                                        <div class="h-10"></div>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-right">
+                                    <span [ngClass]="tx.type === 1 ? 'text-emerald-600' : 'text-rose-600'"
+                                        class="text-sm font-black tracking-tighter">
+                                        {{ (tx.type === 1 ? tx.amount : -tx.amount) | number:'1.2-2' }} <small
+                                            class="text-[9px] opacity-60 ml-0.5">TL</small>
+                                    </span>
+                                </td>
+                            </ng-container>
+
+                            <!-- Actions Column -->
+                            <ng-container matColumnDef="actions">
+                                <th mat-header-cell *matHeaderCellDef class="text-center">
+                                    <div class="header-cell-content items-center">
+                                        <span class="header-label">İŞLEM</span>
+                                        <div class="h-10"></div>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-center">
+                                    <button mat-icon-button [matMenuTriggerFor]="menu" class="text-slate-400">
+                                        <mat-icon>more_vert</mat-icon>
+                                    </button>
+                                    <mat-menu #menu="matMenu" class="!rounded-2xl !p-2 !shadow-2xl">
+                                        <button mat-menu-item (click)="duplicateTx(tx)"
+                                            class="!text-slate-600 !font-bold">
+                                            <mat-icon class="!text-indigo-600">content_copy</mat-icon> Kopyala
+                                        </button>
+                                        <button mat-menu-item (click)="openEdit(tx)" class="!text-slate-600 !font-bold">
+                                            <mat-icon class="!text-amber-500">edit_note</mat-icon> Düzenle
+                                        </button>
+                                        <mat-divider class="!my-2"></mat-divider>
+                                        <button mat-menu-item (click)="deleteTx(tx.id)"
+                                            class="!text-rose-600 !font-bold">
+                                            <mat-icon class="!text-rose-600">delete_sweep</mat-icon> Sil
+                                        </button>
+                                    </mat-menu>
+                                </td>
+                            </ng-container>
+
+                            <tr mat-header-row *matHeaderRowDef="displayedColumns" class="!h-24"></tr>
+                            <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+                                class="hover:bg-slate-50/50 transition-all border-b border-slate-50"></tr>
+                        </table>
+
+                        <div *ngIf="filteredTransactions().length === 0"
+                            class="flex flex-col items-center justify-center p-24 text-slate-300">
+                            <mat-icon class="!w-24 !h-24 !text-9xl mb-6 opacity-30">inventory_2</mat-icon>
+                            <p class="font-black uppercase tracking-[0.3em] text-xs">Aradığınız kriterlere uygun kayıt
+                                bulunanamadı</p>
+                            <button *ngIf="searchTerm()" mat-button color="primary"
+                                class="mt-4 !font-black !uppercase !text-[10px]" (click)="searchTerm.set('')">Aramayı
+                                Temizle</button>
+                        </div>
+                    </div>
+                </mat-card>
+
+            </div>
+        </div>
+    </mat-sidenav-content>
+
+    <!-- RIGHT FORM SIDENAV -->
+    <mat-sidenav #sidenav position="end" mode="over" [opened]="showForm()" (closed)="showForm.set(false)"
+        class="sidenav-form-panel">
+        <div class="form-container">
+            <div class="flex items-center gap-5 mb-12">
+                <div class="form-header-icon">
+                    <mat-icon class="scale-125">{{editingTx ? 'draw' : 'post_add'}}</mat-icon>
+                </div>
+                <div>
+                    <h2 class="text-3xl font-black text-slate-800 tracking-tight">
+                        {{editingTx ? 'Kaydı Güncelle' : (isDuplicate ? 'Yeni Kayıt (Kopya)' : 'Yeni Kayıt')}}
+                    </h2>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Sistem İşlem
+                        Giriş Paneli</p>
+                </div>
+            </div>
+
+            <div class="flex-1 space-y-8 overflow-y-auto pr-2 custom-scroll">
+
+                <div class="grid grid-cols-2 gap-6">
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                        <mat-label>Mükellef</mat-label>
+                        <mat-select [(ngModel)]="formTx.taxpayer_id">
+                            <mat-option *ngFor="let tp of metadata().taxpayers"
+                                [value]="tp.id">{{tp.full_name}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                        <mat-label>İşlem Tipi</mat-label>
+                        <mat-select [(ngModel)]="formTx.type">
+                            <mat-option [value]="1">Gelir</mat-option>
+                            <mat-option [value]="-1">Gider</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                    <mat-label>Tutar (TL)</mat-label>
+                    <input matInput type="number" [(ngModel)]="formTx.amount"
+                        class="!text-3xl !font-black !text-indigo-600 h-12">
+                    <span matSuffix class="font-black text-slate-300 ml-2">TL</span>
+                </mat-form-field>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                        <mat-label>Gün</mat-label>
+                        <input matInput type="number" [(ngModel)]="formTx.day" min="1" max="31">
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                        <mat-label>Ay</mat-label>
+                        <input matInput type="number" [(ngModel)]="formTx.month" min="1" max="12">
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                        <mat-label>Yıl</mat-label>
+                        <input matInput type="number" [(ngModel)]="formTx.year">
+                    </mat-form-field>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                        <mat-label>Kaynak</mat-label>
+                        <mat-select [(ngModel)]="formTx.source_id">
+                            <mat-option *ngFor="let s of filteredFormSources()" [value]="s.id">{{s.name}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                    <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                        <mat-label>Ödeme Yöntemi</mat-label>
+                        <mat-select [(ngModel)]="formTx.payment_method_id">
+                            <mat-option *ngFor="let p of metadata().payment_methods"
+                                [value]="p.id">{{p.method_name}}</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                    <mat-label>Açıklama</mat-label>
+                    <textarea matInput [(ngModel)]="formTx.description" rows="4"></textarea>
+                </mat-form-field>
+
+                <div class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100/50 flex items-center gap-4">
+                    <mat-checkbox [(ngModel)]="formTx.is_taxable" color="primary" class="scale-125"></mat-checkbox>
+                    <div>
+                        <p class="text-xs font-black text-slate-800 uppercase tracking-wide">Beyana Dahil</p>
+                        <p class="text-[10px] text-slate-400 font-medium">Bu işlem vergi hesaplamasına dahil edilsin
+                            mi?</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-12 grid grid-cols-2 gap-5">
+                <button mat-stroked-button
+                    class="!py-7 !rounded-2xl !text-[10px] !font-black !uppercase !tracking-[0.2em] !text-slate-400"
+                    (click)="showForm.set(false)">İptal Et</button>
+                <button mat-flat-button color="primary"
+                    class="!py-7 !rounded-2xl !text-[10px] !font-black !uppercase !tracking-[0.2em] !shadow-2xl !shadow-indigo-100"
+                    (click)="saveTx()">
+                    {{editingTx ? 'Güncelle' : 'Kaydı Tamamla'}}
+                </button>
+            </div>
+        </div>
+    </mat-sidenav>
+</mat-sidenav-container>

@@ -81,7 +81,9 @@ async def get_metadata():
     return {
         "taxpayers": tp_service.get_all(),
         "sources": src_service.get_all(),
-        "payment_methods": pm_service.get_all()
+        "payment_methods": pm_service.get_all(),
+        "last_year": tx_service.get_last_year(),
+        "years": tx_service.get_years()
     }
 
 @app.get("/transactions")

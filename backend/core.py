@@ -148,6 +148,25 @@ class TransactionService(BaseService):
             conn.execute("DELETE FROM transactions WHERE id=?", (t_id,))
             conn.commit()
 
+    def get_last_year(self) -> int:
+        query = "SELECT MAX(year) as last_year FROM transactions"
+        with self.db.get_connection() as conn:
+            row = conn.execute(query).fetchone()
+            if row and row['last_year']:
+                return row['last_year']
+        from datetime import datetime
+        return datetime.now().year
+
+    def get_years(self) -> List[int]:
+        query = "SELECT DISTINCT year FROM transactions ORDER BY year DESC"
+        with self.db.get_connection() as conn:
+            rows = conn.execute(query).fetchall()
+            years = [row['year'] for row in rows]
+            if not years:
+                from datetime import datetime
+                years = [datetime.now().year]
+            return years
+
     def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
         query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, pm.method_name,
                           d.doc_ref, d.display_name as doc_name, d.relative_path, d.gdrive_id
