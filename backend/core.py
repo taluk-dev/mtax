@@ -148,6 +148,11 @@ class TransactionService(BaseService):
             conn.execute("DELETE FROM transactions WHERE id=?", (t_id,))
             conn.commit()
 
+    def get_transaction(self, t_id: int) -> Optional[Transaction]:
+        with self.db.get_connection() as conn:
+            row = conn.execute("SELECT * FROM transactions WHERE id=?", (t_id,)).fetchone()
+            return Transaction(**dict(row)) if row else None
+
     def get_last_year(self) -> int:
         query = "SELECT MAX(year) as last_year FROM transactions"
         with self.db.get_connection() as conn:

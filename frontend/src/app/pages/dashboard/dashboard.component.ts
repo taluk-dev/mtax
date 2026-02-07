@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { ApiService, Transaction, Summary } from '../../api.service';
 
 // Angular Material Imports
@@ -21,6 +22,8 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TransactionDialogComponent } from './transaction-dialog/transaction-dialog.component';
 
 @Component({
     selector: 'app-dashboard',
@@ -44,16 +47,16 @@ import { MatMenuModule } from '@angular/material/menu';
         MatListModule,
         MatDividerModule,
         MatTooltipModule,
-        MatMenuModule
+        MatMenuModule,
+        MatDialogModule,
+        TransactionDialogComponent,
+        RouterModule
     ],
     templateUrl: './dashboard.component.html',
     styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent implements OnInit {
     loading = signal(false);
-    showForm = signal(false);
-    editingTx: number | null = null;
-    isDuplicate = false;
 
     transactions = signal<Transaction[]>([]);
     summary = signal<Summary>({ total_income: 0, total_expense: 0, taxable_income: 0, net_income: 0 });
@@ -83,7 +86,7 @@ export class DashboardComponent implements OnInit {
 
     searchTerm = signal('');
 
-    formTx: Transaction = this.initForm();
+
 
     // Dynamic Source Filtering
     filteredFilterSources = computed(() => {
@@ -93,11 +96,7 @@ export class DashboardComponent implements OnInit {
         return sources.filter(s => s.type === type || s.type === 0);
     });
 
-    filteredFormSources = computed(() => {
-        const type = this.formTx.type;
-        const sources = this.metadata().sources;
-        return sources.filter((s: any) => s.type === type || s.type === 0);
-    });
+
 
     filteredTransactions = computed(() => {
         const term = this.searchTerm().toLowerCase();
@@ -120,7 +119,12 @@ export class DashboardComponent implements OnInit {
         { name: 'Ekim', code: 10 }, { name: 'Kasım', code: 11 }, { name: 'Aralık', code: 12 }
     ];
 
-    constructor(private api: ApiService, private snackBar: MatSnackBar) {
+    constructor(
+        private api: ApiService,
+        private snackBar: MatSnackBar,
+        private dialog: MatDialog,
+        private router: Router
+    ) {
         // Automatically load data whenever filters change
         effect(() => {
             this.filters();
@@ -198,40 +202,28 @@ export class DashboardComponent implements OnInit {
     }
 
     openAdd() {
-        this.editingTx = null;
-        this.isDuplicate = false;
-        this.formTx = this.initForm();
-        this.showForm.set(true);
+        this.router.navigate(['/transaction/new']);
     }
 
     duplicateTx(tx: Transaction) {
-        this.editingTx = null;
-        this.isDuplicate = true;
-        this.formTx = { ...tx };
-        delete this.formTx.id;
-        this.showForm.set(true);
+        this.router.navigate(['/transaction/duplicate', tx.id]);
     }
 
     openEdit(tx: Transaction) {
-        this.editingTx = tx.id!;
-        this.isDuplicate = false;
-        this.formTx = { ...tx };
-        this.showForm.set(true);
+        this.router.navigate(['/transaction/edit', tx.id]);
     }
 
-    saveTx() {
-        this.formTx.transaction_date = `${this.formTx.year}-${String(this.formTx.month).padStart(2, '0')}-${String(this.formTx.day).padStart(2, '0')}`;
+    saveTx(tx: Transaction, id?: number) {
+        tx.transaction_date = `${tx.year}-${String(tx.month).padStart(2, '0')}-${String(tx.day).padStart(2, '0')}`;
 
-        if (this.editingTx) {
-            this.api.updateTransaction(this.editingTx, this.formTx).subscribe(() => {
+        if (id) {
+            this.api.updateTransaction(id, tx).subscribe(() => {
                 this.snackBar.open('Kayıt güncellendi!', 'Tamam', { duration: 2000 });
-                this.showForm.set(false);
                 this.loadData();
             });
         } else {
-            this.api.addTransaction(this.formTx).subscribe(() => {
+            this.api.addTransaction(tx).subscribe(() => {
                 this.snackBar.open('Yeni kayıt eklendi!', 'Tamam', { duration: 2000 });
-                this.showForm.set(false);
                 this.loadData();
             });
         }

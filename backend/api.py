@@ -148,6 +148,13 @@ async def delete_transaction(tx_id: int):
     tx_service.delete_transaction(tx_id)
     return {"status": "deleted"}
 
+@app.get("/transactions/{tx_id}")
+async def get_transaction(tx_id: int):
+    tx = tx_service.get_transaction(tx_id)
+    if not tx:
+        raise HTTPException(status_code=404, detail="Transaction not found")
+    return tx
+
 @app.post("/documents")
 async def add_document(doc: DocumentIn):
     new_doc = Document(

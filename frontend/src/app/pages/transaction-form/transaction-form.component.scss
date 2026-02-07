@@ -1,0 +1,361 @@
+.page-container {
+    min-height: 100vh;
+    background-color: #f1f5f9;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.form-card-wrapper {
+    width: 100%;
+    max-width: 760px; // More compact width
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+// Header
+.form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+
+        .back-btn {
+            background: white;
+            color: #64748b;
+            border: 1px solid #e2e8f0;
+
+            &:hover {
+                background: #f8fafc;
+                color: #1e293b;
+            }
+        }
+
+        .title-group {
+            h1 {
+                margin: 0;
+                font-size: 1.5rem;
+                font-weight: 800;
+                color: #0f172a;
+                letter-spacing: -0.02em;
+            }
+
+            p {
+                margin: 0;
+                font-size: 0.75rem;
+                color: #64748b;
+                font-weight: 500;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+            }
+        }
+    }
+
+    .type-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 800;
+        font-size: 10px;
+        letter-spacing: 0.05em;
+
+        &.income {
+            background: #ecfdf5;
+            color: #059669;
+            border: 1px solid #d1fae5;
+        }
+
+        &.expense {
+            background: #fff1f2;
+            color: #e11d48;
+            border: 1px solid #ffe4e6;
+        }
+
+        mat-icon {
+            font-size: 1.1rem;
+            width: 1.1rem;
+            height: 1.1rem;
+        }
+    }
+}
+
+// Card
+.main-form-card {
+    border-radius: 2rem !important;
+    border: none !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04) !important;
+    background: white;
+
+    mat-card-content {
+        padding: 2.5rem !important;
+    }
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.section-full {
+    grid-column: 1 / -1;
+}
+
+// Amount Section Refined
+.amount-section {
+    background: #f8fafc;
+    padding: 1.5rem 2rem;
+    border-radius: 1.25rem;
+    border: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-bottom: 0.5rem;
+
+    .label-group {
+        .section-label {
+            font-size: 10px;
+            font-weight: 900;
+            color: #94a3b8;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.25rem;
+        }
+
+        .sub-label {
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+    }
+
+    .amount-field-container {
+        flex: 1;
+        max-width: 300px;
+
+        ::ng-deep {
+            .mat-mdc-form-field-flex {
+                background: white !important;
+                padding: 0.25rem 1.25rem !important;
+                border: 1.5px solid #e0e7ff !important;
+                border-radius: 1rem !important;
+            }
+
+            .mdc-notched-outline {
+                display: none !important;
+            }
+
+            .mat-mdc-form-field-infix {
+                padding: 0.75rem 0 !important;
+            }
+
+            input {
+                font-size: 2rem !important;
+                font-weight: 900 !important;
+                color: #4f46e5 !important;
+                text-align: right;
+            }
+
+            .currency {
+                font-weight: 900;
+                color: #94a3b8;
+                font-size: 1.1rem;
+                margin-left: 0.75rem;
+            }
+        }
+    }
+}
+
+// Date Inputs Row
+.date-row-box {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    background: #f8fafc;
+    padding: 1.25rem;
+    border-radius: 1.25rem;
+    border: 1px solid #f1f5f9;
+
+    .date-field {
+        ::ng-deep {
+            .mat-mdc-form-field-infix {
+                text-align: center;
+            }
+
+            input {
+                font-weight: 700;
+                color: #334155;
+            }
+        }
+    }
+}
+
+// Compliance / Taxable box
+.compliance-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.75rem;
+    background: #f8fafc;
+    border: 1.5px dashed #e2e8f0;
+    border-radius: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .compliance-content {
+        display: flex;
+        align-items: center;
+        gap: 1.25rem;
+
+        mat-icon {
+            font-size: 1.75rem;
+            width: 1.75rem;
+            height: 1.75rem;
+            color: #cbd5e1;
+
+            &.active {
+                color: #6366f1;
+            }
+        }
+
+        .text {
+            h3 {
+                margin: 0;
+                font-size: 0.9rem;
+                font-weight: 800;
+                color: #1e293b;
+                letter-spacing: -0.01em;
+            }
+
+            p {
+                margin: 1px 0 0;
+                font-size: 0.75rem;
+                color: #64748b;
+                font-weight: 500;
+            }
+        }
+    }
+}
+
+// Actions
+.form-actions {
+    padding: 1.5rem 2.5rem 2.5rem 2.5rem !important;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+
+    button {
+        height: 3.75rem !important;
+        border-radius: 1.25rem !important;
+        font-size: 10px !important;
+        font-weight: 900 !important;
+        letter-spacing: 0.12em !important;
+        padding: 0 2rem !important;
+    }
+
+    .secondary-btn {
+        color: #94a3b8 !important;
+        border: 1.5px solid #e2e8f0 !important;
+        background: white !important;
+
+        &:hover {
+            background: #f8fafc !important;
+            color: #64748b !important;
+        }
+    }
+
+    .primary-btn {
+        min-width: 220px;
+        box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3) !important;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(79, 70, 229, 0.4) !important;
+        }
+    }
+}
+
+// Global Form Field Overrides
+::ng-deep {
+    .mat-mdc-form-field {
+        width: 100%;
+
+        .mat-mdc-text-field-wrapper {
+            background-color: #f8fafc !important;
+            border-radius: 1rem !important;
+            border: 1px solid transparent !important;
+            transition: all 0.2s;
+
+            &:hover {
+                background-color: #f1f5f9 !important;
+            }
+        }
+
+        &.mat-focused .mat-mdc-text-field-wrapper {
+            background-color: white !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .mdc-line-ripple {
+            display: none !important;
+        }
+
+        mat-icon[matPrefix] {
+            color: #94a3b8;
+            font-size: 1.2rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            margin-right: 0.75rem;
+        }
+
+        .mat-mdc-select-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .mat-mdc-form-field-label {
+            font-weight: 500;
+            color: #64748b !important;
+        }
+    }
+}
+
+@media (max-width: 640px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .main-form-card mat-card-content {
+        padding: 1.5rem !important;
+    }
+
+    .amount-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .amount-field-container {
+        max-width: 100%;
+    }
+}

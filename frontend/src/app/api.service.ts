@@ -68,6 +68,10 @@ export class ApiService {
         return this.http.get<DashboardData>(`${this.apiUrl}/transactions`, { params });
     }
 
+    getTransaction(id: number): Observable<Transaction> {
+        return this.http.get<Transaction>(`${this.apiUrl}/transactions/${id}`);
+    }
+
     addTransaction(tx: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/transactions`, tx);
     }
