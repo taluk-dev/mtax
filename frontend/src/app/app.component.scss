@@ -1,0 +1,31 @@
+:host ::ng-deep {
+    .mat-mdc-form-field-subscript-wrapper { display: none; }
+    .mat-mdc-text-field-wrapper { background-color: #f8fafc !important; }
+    .mat-mdc-form-field-flex { padding: 12px 16px !important; }
+    .mdc-line-ripple { display: none; }
+    .mdc-text-field--filled:not(.mdc-text-field--disabled) { background-color: #f8fafc !important; }
+    
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    
+    table { background: transparent !important; }
+    .mat-mdc-table { background: transparent !important; }
+    .mat-mdc-header-row { height: 70px; border: none; }
+    .mat-mdc-row { height: 75px; border-bottom: 1px solid #f8fafc !important; }
+    .mat-mdc-cell { border-bottom: none !important; }
+    .mat-mdc-header-cell { border-bottom: 2px solid #f8fafc !important; }
+
+    /* Selection List Styles */
+    .mat-mdc-selection-list {
+        --mdc-list-list-item-container-shape: 1rem;
+        background: transparent !important;
+    }
+    .mat-mdc-list-option {
+        border: 1px solid transparent;
+    }
+    .mat-mdc-list-option.mdc-list-item--selected {
+        background-color: white !important;
+        border-color: #e2e8f0 !important;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+    }
+}
