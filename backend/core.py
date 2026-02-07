@@ -147,7 +147,7 @@ class TransactionService(BaseService):
             conn.execute("DELETE FROM transactions WHERE id=?", (t_id,))
             conn.commit()
 
-    def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None) -> List[Dict]:
+    def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
         query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, pm.method_name,
                           d.doc_ref, d.display_name as doc_name, d.relative_path, d.gdrive_id
                    FROM transactions t
@@ -165,14 +165,24 @@ class TransactionService(BaseService):
             query += " AND t.taxpayer_id = ?"; params.append(taxpayer_id)
         if transaction_type:
             query += " AND t.type = ?"; params.append(transaction_type)
+        if source_id:
+            if isinstance(source_id, list):
+                placeholders = ','.join(['?' for _ in source_id])
+                query += f" AND t.source_id IN ({placeholders})"
+                params.extend(source_id)
+            else:
+                query += " AND t.source_id = ?"
+                params.append(source_id)
+        if is_taxable is not None:
+            query += " AND t.is_taxable = ?"; params.append(1 if is_taxable else 0)
         
         query += " ORDER BY t.transaction_date DESC, t.id DESC"
         with self.db.get_connection() as conn:
             rows = conn.execute(query, params).fetchall()
             return [dict(row) for row in rows]
 
-    def get_summary(self, year=None, taxpayer_id=None, transaction_type=None, month=None) -> Dict:
-        txs = self.get_transactions(year, taxpayer_id, transaction_type, month)
+    def get_summary(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> Dict:
+        txs = self.get_transactions(year, taxpayer_id, transaction_type, month, source_id, is_taxable)
         income = sum(t['amount'] for t in txs if t['type'] == TransactionType.INCOME)
         expense = sum(t['amount'] for t in txs if t['type'] == TransactionType.EXPENSE)
         taxable = sum(t['amount'] for t in txs if t['type'] == TransactionType.INCOME and t['is_taxable'])

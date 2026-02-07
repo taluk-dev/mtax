@@ -61,13 +61,15 @@ async def get_metadata():
 
 @app.get("/transactions")
 async def get_transactions(
-    year: Optional[int] = None,
-    taxpayer_id: Optional[int] = None,
-    type: Optional[int] = None,
-    month: Optional[int] = None
+    year: Optional[int] = Query(None),
+    taxpayer_id: Optional[int] = Query(None),
+    type: Optional[int] = Query(None),
+    month: Optional[int] = Query(None),
+    source_id: Optional[List[int]] = Query(None),
+    is_taxable: Optional[bool] = Query(None)
 ):
-    txs = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month)
-    summary = tx_service.get_summary(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month)
+    txs = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable)
+    summary = tx_service.get_summary(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable)
     return {
         "transactions": txs,
         "summary": summary
@@ -132,4 +134,4 @@ async def add_document(doc: DocumentIn):
     return {"document_id": doc_id}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)

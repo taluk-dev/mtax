@@ -111,6 +111,22 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                   </mat-form-field>
                 </div>
 
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Kaynak</mat-label>
+                  <mat-select [ngModel]="filters().source_id" (ngModelChange)="updateFilter('source_id', $event)" multiple>
+                    <mat-option *ngFor="let s of metadata().sources" [value]="s.id">{{s.name}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Beyana Dahil</mat-label>
+                  <mat-select [ngModel]="filters().is_taxable" (ngModelChange)="updateFilter('is_taxable', $event)">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="true">Dahil</mat-option>
+                    <mat-option [value]="false">Dahil Değil</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
                 <button mat-flat-button color="primary" class="!w-full !py-7 !rounded-2xl !text-lg !font-black !uppercase !tracking-widest !shadow-xl !shadow-indigo-100" (click)="loadData()">
                   Listele
                 </button>
@@ -367,7 +383,9 @@ export class App implements OnInit {
     year: 2026,
     month: null as number | null,
     taxpayer_id: null as number | null,
-    type: null as number | null
+    type: null as number | null,
+    source_id: [] as number[],
+    is_taxable: null as boolean | null
   });
 
   formTx: Transaction = this.initForm();
@@ -412,6 +430,8 @@ export class App implements OnInit {
     if (currentFilters.taxpayer_id) params.taxpayer_id = currentFilters.taxpayer_id;
     if (currentFilters.type) params.type = currentFilters.type;
     if (currentFilters.month) params.month = currentFilters.month;
+    if (currentFilters.source_id && currentFilters.source_id.length > 0) params.source_id = currentFilters.source_id;
+    if (currentFilters.is_taxable !== null) params.is_taxable = currentFilters.is_taxable;
 
     this.api.getDashboard(params).subscribe({
       next: (data) => {
