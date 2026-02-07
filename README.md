@@ -66,5 +66,10 @@ mtax/
 └── README.md            # You are here!
 ```
 
+## 💡 Developer Notes
+
+- **Hot-Reload:** The backend uses `uvicorn` with `reload=True`. Any changes made to `api.py` or `core.py` will automatically restart the server, providing a seamless development experience.
+- **Zoneless Angular:** The frontend utilizes Angular's latest zoneless change detection strategy for optimal performance.
+
 ---
 *Developed with focus on performance, aesthetics, and modern web standards.*
