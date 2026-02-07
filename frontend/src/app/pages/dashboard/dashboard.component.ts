@@ -22,8 +22,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { TransactionDialogComponent } from './transaction-dialog/transaction-dialog.component';
+
 
 @Component({
     selector: 'app-dashboard',
@@ -48,8 +47,6 @@ import { TransactionDialogComponent } from './transaction-dialog/transaction-dia
         MatDividerModule,
         MatTooltipModule,
         MatMenuModule,
-        MatDialogModule,
-        TransactionDialogComponent,
         RouterModule
     ],
     templateUrl: './dashboard.component.html',
@@ -122,7 +119,6 @@ export class DashboardComponent implements OnInit {
     constructor(
         private api: ApiService,
         private snackBar: MatSnackBar,
-        private dialog: MatDialog,
         private router: Router
     ) {
         // Automatically load data whenever filters change
