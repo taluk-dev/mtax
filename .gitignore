@@ -8,10 +8,7 @@ venv/
 ENV/
 env/
 
-# Data & Config
-backend/.env
-backend/*.db
-.env
+# Data & Config tracked by user request
 *.bak
 
 # IDEs
