@@ -11,6 +11,7 @@ export interface Source {
     id: number;
     name: string;
     taxpayer_id: number;
+    type: number;
 }
 
 export interface PaymentMethod {

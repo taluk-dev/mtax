@@ -1,8 +1,8 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from datetime import date
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import uvicorn
 
 # core.py içerisindeki mevcut servisleri kullanıyoruz
@@ -41,6 +41,31 @@ class TransactionIn(BaseModel):
     description: Optional[str] = None
     document_id: Optional[int] = None
     is_taxable: bool = False
+
+    @model_validator(mode='before')
+    @classmethod
+    def handle_null_date_fields(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            tx_date = data.get('transaction_date')
+            if isinstance(tx_date, str):
+                parts = tx_date.split('-')
+                if len(parts) == 3:
+                    year, month, day = parts
+                    modified = False
+                    if month == 'null':
+                        month = '06'
+                        modified = True
+                        if data.get('month') is None:
+                            data['month'] = 6
+                    if day == 'null':
+                        day = '15'
+                        modified = True
+                        if data.get('day') is None:
+                            data['day'] = 15
+                    
+                    if modified:
+                        data['transaction_date'] = f"{year}-{month}-{day}"
+        return data
 
 class DocumentIn(BaseModel):
     doc_ref: Optional[str] = None

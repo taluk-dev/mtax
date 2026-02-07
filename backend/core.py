@@ -34,6 +34,7 @@ class Source:
     share_percentage: float = 1.0
     detail: Optional[str] = None
     default_amount: Optional[float] = None
+    type: int = 1 # 1: Income, -1: Expense
 
 @dataclass
 class Document:

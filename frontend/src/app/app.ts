@@ -17,6 +17,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatListModule } from '@angular/material/list';
+import { MatDividerModule } from '@angular/material/divider';
 
 @Component({
   selector: 'app-root',
@@ -36,7 +38,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatListModule,
+    MatDividerModule
   ],
   template: `
 <div class="h-screen flex flex-col bg-[#f0f2f5]">
@@ -81,7 +85,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-label>Mükellef</mat-label>
                   <mat-select [ngModel]="filters().taxpayer_id" (ngModelChange)="updateFilter('taxpayer_id', $event)">
-                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="'all'">Tümü</mat-option>
                     <mat-option *ngFor="let tp of metadata().taxpayers" [value]="tp.id">{{tp.full_name}}</mat-option>
                   </mat-select>
                 </mat-form-field>
@@ -89,11 +93,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <mat-form-field appearance="outline" class="w-full">
                   <mat-label>İşlem Tipi</mat-label>
                   <mat-select [ngModel]="filters().type" (ngModelChange)="updateFilter('type', $event)">
-                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="'all'">Tümü</mat-option>
                     <mat-option [value]="1">Gelir</mat-option>
                     <mat-option [value]="-1">Gider</mat-option>
                   </mat-select>
                 </mat-form-field>
+                
 
                 <div class="grid grid-cols-2 gap-4">
                   <mat-form-field appearance="outline" class="w-full">
@@ -105,27 +110,58 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                   <mat-form-field appearance="outline" class="w-full">
                     <mat-label>Ay</mat-label>
                     <mat-select [ngModel]="filters().month" (ngModelChange)="updateFilter('month', $event)">
-                      <mat-option [value]="null">Tümü</mat-option>
+                      <mat-option [value]="'all'">Tümü</mat-option>
                       <mat-option *ngFor="let m of months" [value]="m.code">{{m.name}}</mat-option>
                     </mat-select>
                   </mat-form-field>
                 </div>
 
+
                 <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>Kaynak</mat-label>
-                  <mat-select [ngModel]="filters().source_id" (ngModelChange)="updateFilter('source_id', $event)" multiple>
-                    <mat-option *ngFor="let s of metadata().sources" [value]="s.id">{{s.name}}</mat-option>
+                  <mat-label>Beyana Dahil Mi</mat-label>
+                  <mat-select [ngModel]="filters().is_taxable" (ngModelChange)="updateFilter('is_taxable', $event)">
+                    <mat-option [value]="'all'">Hepsi</mat-option>
+                    <mat-option [value]="true">Evet</mat-option>
+                    <mat-option [value]="false">Hayır</mat-option>
                   </mat-select>
                 </mat-form-field>
 
-                <mat-form-field appearance="outline" class="w-full">
-                  <mat-label>Beyana Dahil</mat-label>
-                  <mat-select [ngModel]="filters().is_taxable" (ngModelChange)="updateFilter('is_taxable', $event)">
-                    <mat-option [value]="null">Tümü</mat-option>
-                    <mat-option [value]="true">Dahil</mat-option>
-                    <mat-option [value]="false">Dahil Değil</mat-option>
-                  </mat-select>
-                </mat-form-field>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between px-1">
+                    <div class="flex items-center gap-2">
+                      <button mat-button class="!text-[9px] !font-black !uppercase !tracking-widest !text-indigo-600 !p-0 !min-w-0" 
+                              (click)="selectAllSources()">
+                        Tümünü Seç
+                      </button>
+                      <span class="text-slate-200">|</span>
+                      <button mat-button class="!text-[9px] !font-black !uppercase !tracking-widest !text-slate-400 !p-0 !min-w-0" 
+                              (click)="updateFilter('source_id', []); sourceList.deselectAll()">
+                        Temizle
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div class="bg-slate-50/50 rounded-3xl border border-slate-100 overflow-hidden">
+                    <mat-selection-list #sourceList class="max-h-60 overflow-y-auto custom-scroll !p-2" 
+                                        (selectionChange)="updateFilter('source_id', getSelectedValues(sourceList))">
+                      <mat-list-option *ngFor="let s of filteredFilterSources()" 
+                                       [value]="s.id"
+                                       [selected]="filters().source_id.includes(s.id)"
+                                       togglePosition="before"
+                                       class="!rounded-2xl !mb-1 hover:bg-white transition-colors !h-auto !py-1">
+                        <div class="flex flex-col">
+                          <span class="text-xs font-bold text-slate-700">{{s.name}}</span>
+                          <span class="text-[9px] text-slate-400 uppercase tracking-tighter">{{s.type === 1 ? 'Gelir' : (s.type === -1 ? 'Gider' : 'Karma')}}</span>
+                        </div>
+                      </mat-list-option>
+                    </mat-selection-list>
+                    
+                    <div *ngIf="filteredFilterSources().length === 0" class="p-8 text-center">
+                      <p class="text-[10px] font-bold text-slate-400 uppercase">Kaynak bulunamadı</p>
+                    </div>
+                  </div>
+                  
+                </div>
 
                 <button mat-flat-button color="primary" class="!w-full !py-7 !rounded-2xl !text-lg !font-black !uppercase !tracking-widest !shadow-xl !shadow-indigo-100" (click)="loadData()">
                   Listele
@@ -195,7 +231,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <!-- Date Column -->
                 <ng-container matColumnDef="date">
                   <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase !py-6 !pl-8"> Tarih </th>
-                  <td mat-cell *matCellDef="let tx" class="!py-4 !pl-8 !text-xs !font-bold text-slate-500"> {{tx.transaction_date}} </td>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 !pl-8 !text-xs !font-bold text-slate-500"> {{tx.transaction_date | date:'dd.MM.yyyy'}} </td>
                 </ng-container>
 
                 <!-- Taxpayer Column -->
@@ -208,6 +244,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <ng-container matColumnDef="description">
                   <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase"> Açıklama </th>
                   <td mat-cell *matCellDef="let tx" class="!py-4 !text-sm text-slate-500 max-w-[250px] truncate" [title]="tx.description"> {{tx.description}} </td>
+                </ng-container>
+
+                <!-- Taxable Column -->
+                <ng-container matColumnDef="is_taxable">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase text-center"> Beyan </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 text-center">
+                    <mat-icon [class]="tx.is_taxable ? 'text-indigo-600' : 'text-slate-200'" class="!text-xl">
+                      {{tx.is_taxable ? 'check_circle' : 'radio_button_unchecked'}}
+                    </mat-icon>
+                  </td>
                 </ng-container>
 
                 <!-- Amount Column -->
@@ -223,10 +269,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                   <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase text-center pr-8"> İşlem </th>
                   <td mat-cell *matCellDef="let tx" class="!py-4 text-center pr-8">
                     <div class="flex justify-center gap-1">
-                      <button mat-icon-button (click)="openEdit(tx)" class="!w-9 !h-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                      <button mat-icon-button (click)="duplicateTx(tx)" class="!w-9 !h-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Kopyala">
+                        <mat-icon class="!text-lg">content_copy</mat-icon>
+                      </button>
+                      <button mat-icon-button (click)="openEdit(tx)" class="!w-9 !h-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Düzenle">
                         <mat-icon class="!text-lg">edit</mat-icon>
                       </button>
-                      <button mat-icon-button (click)="deleteTx(tx.id)" class="!w-9 !h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                      <button mat-icon-button (click)="deleteTx(tx.id)" class="!w-9 !h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors" title="Sil">
                         <mat-icon class="!text-lg">delete</mat-icon>
                       </button>
                     </div>
@@ -256,7 +305,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <mat-icon class="scale-125">{{editingTx ? 'draw' : 'post_add'}}</mat-icon>
             </div>
             <div>
-                <h2 class="text-3xl font-black text-slate-800 tracking-tight">{{editingTx ? 'Kaydı Güncelle' : 'Yeni Kayıt'}}</h2>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">
+                  {{editingTx ? 'Kaydı Güncelle' : (isDuplicate ? 'Yeni Kayıt (Kopya)' : 'Yeni Kayıt')}}
+                </h2>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Sistem İşlem Giriş Paneli</p>
             </div>
         </div>
@@ -304,7 +355,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
                 <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
                     <mat-label>Kaynak</mat-label>
                     <mat-select [(ngModel)]="formTx.source_id">
-                        <mat-option *ngFor="let s of metadata().sources" [value]="s.id">{{s.name}}</mat-option>
+                        <mat-option *ngFor="let s of filteredFormSources()" [value]="s.id">{{s.name}}</mat-option>
                     </mat-select>
                 </mat-form-field>
                 <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
@@ -357,6 +408,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         .mat-mdc-row { height: 75px; border-bottom: 1px solid #f8fafc !important; }
         .mat-mdc-cell { border-bottom: none !important; }
         .mat-mdc-header-cell { border-bottom: 2px solid #f8fafc !important; }
+
+        /* Selection List Styles */
+        .mat-mdc-selection-list {
+            --mdc-list-list-item-container-shape: 1rem;
+            background: transparent !important;
+        }
+        .mat-mdc-list-option {
+            border: 1px solid transparent;
+        }
+        .mat-mdc-list-option.mdc-list-item--selected {
+            background-color: white !important;
+            border-color: #e2e8f0 !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
     }
   `]
 })
@@ -365,6 +430,7 @@ export class App implements OnInit {
   loading = signal(false);
   showForm = signal(false);
   editingTx: number | null = null;
+  isDuplicate = false;
 
   transactions = signal<Transaction[]>([]);
   summary = signal<Summary>({ total_income: 0, total_expense: 0, taxable_income: 0, net_income: 0 });
@@ -381,15 +447,30 @@ export class App implements OnInit {
 
   filters = signal({
     year: 2026,
-    month: null as number | null,
-    taxpayer_id: null as number | null,
-    type: null as number | null,
+    month: 'all' as number | null | 'all',
+    taxpayer_id: 'all' as number | null | 'all',
+    type: 'all' as number | null | 'all',
     source_id: [] as number[],
-    is_taxable: null as boolean | null
+    is_taxable: 'all' as boolean | null | 'all'
   });
 
   formTx: Transaction = this.initForm();
-  displayedColumns: string[] = ['date', 'taxpayer', 'description', 'amount', 'actions'];
+
+  // Dynamic Source Filtering
+  filteredFilterSources = computed(() => {
+    const type = this.filters().type;
+    const sources = this.metadata().sources;
+    if (!type || type === 'all') return sources;
+    return sources.filter(s => s.type === type || s.type === 0);
+  });
+
+  filteredFormSources = computed(() => {
+    const type = this.formTx.type;
+    const sources = this.metadata().sources;
+    return sources.filter(s => s.type === type || s.type === 0);
+  });
+
+  displayedColumns: string[] = ['date', 'taxpayer', 'description', 'is_taxable', 'amount', 'actions'];
 
   years = [2026, 2025, 2024, 2023, 2022];
   months = [
@@ -419,7 +500,13 @@ export class App implements OnInit {
   }
 
   ngOnInit() {
-    this.api.getMetadata().subscribe(meta => this.metadata.set(meta));
+    this.api.getMetadata().subscribe(meta => {
+      this.metadata.set(meta);
+      // Default to all sources selected
+      if (meta.sources && meta.sources.length > 0) {
+        this.updateFilter('source_id', meta.sources.map((s: any) => s.id));
+      }
+    });
     this.loadData();
   }
 
@@ -427,11 +514,11 @@ export class App implements OnInit {
     this.loading.set(true);
     const currentFilters = this.filters();
     const params: any = { year: currentFilters.year };
-    if (currentFilters.taxpayer_id) params.taxpayer_id = currentFilters.taxpayer_id;
-    if (currentFilters.type) params.type = currentFilters.type;
-    if (currentFilters.month) params.month = currentFilters.month;
+    if (currentFilters.taxpayer_id !== 'all' && currentFilters.taxpayer_id !== null) params.taxpayer_id = currentFilters.taxpayer_id;
+    if (currentFilters.type !== 'all' && currentFilters.type !== null) params.type = currentFilters.type;
+    if (currentFilters.month !== 'all' && currentFilters.month !== null) params.month = currentFilters.month;
     if (currentFilters.source_id && currentFilters.source_id.length > 0) params.source_id = currentFilters.source_id;
-    if (currentFilters.is_taxable !== null) params.is_taxable = currentFilters.is_taxable;
+    if (currentFilters.is_taxable !== 'all' && currentFilters.is_taxable !== null) params.is_taxable = currentFilters.is_taxable;
 
     this.api.getDashboard(params).subscribe({
       next: (data) => {
@@ -450,14 +537,35 @@ export class App implements OnInit {
     this.filters.update(prev => ({ ...prev, [key]: value }));
   }
 
+  selectAllSources() {
+    const allIds = this.filteredFilterSources().map(s => s.id);
+    this.updateFilter('source_id', allIds);
+  }
+
+  getSelectedValues(list: any): number[] {
+    return list.selectedOptions.selected.map((option: any) => option.value);
+  }
+
   openAdd() {
     this.editingTx = null;
+    this.isDuplicate = false;
     this.formTx = this.initForm();
+    this.showForm.set(true);
+  }
+
+  duplicateTx(tx: Transaction) {
+    this.editingTx = null;
+    this.isDuplicate = true;
+    this.formTx = { ...tx };
+    delete this.formTx.id;
+    // Keep current date or keep tx date? Usually for institutional finance, copying means same details but maybe new date.
+    // However, often it's the SAME date for splitting transctions. Let's keep existing date.
     this.showForm.set(true);
   }
 
   openEdit(tx: Transaction) {
     this.editingTx = tx.id!;
+    this.isDuplicate = false;
     this.formTx = { ...tx };
     this.showForm.set(true);
   }
