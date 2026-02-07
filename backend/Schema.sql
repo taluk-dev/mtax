@@ -19,6 +19,15 @@ CREATE TABLE IF NOT EXISTS "taxpayers" (
 	"full_name"	TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+CREATE TABLE IF NOT EXISTS "documents" (
+	"id"	INTEGER,
+	"doc_ref"	TEXT,
+	"display_name"	TEXT NOT NULL,
+	"relative_path"	TEXT NOT NULL,
+	"gdrive_id"	TEXT,
+	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
 CREATE TABLE IF NOT EXISTS "transactions" (
 	"id"	INTEGER,
 	"taxpayer_id"	INTEGER,
@@ -29,7 +38,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	"type"	INTEGER,
 	"source_id"	INTEGER,
 	"payment_method_id"	INTEGER,
-	"document_no"	TEXT,
+	"document_id"	INTEGER,
 	"description"	TEXT,
 	"amount"	REAL NOT NULL,
 	"is_taxable"	BOOLEAN DEFAULT FALSE,
@@ -37,6 +46,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("payment_method_id") REFERENCES "payment_methods"("id"),
 	FOREIGN KEY("source_id") REFERENCES "sources"("id"),
-	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id")
+	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id"),
+	FOREIGN KEY("document_id") REFERENCES "documents"("id")
 );
 COMMIT;

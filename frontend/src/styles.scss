@@ -1,0 +1,42 @@
+@use '@angular/material' as mat;
+
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@include mat.core();
+
+$theme: mat.define-theme((color: (theme-type: light,
+        primary: mat.$azure-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: (brand-family: 'Roboto',
+        plain-family: 'Roboto',
+      )));
+
+html {
+  height: 100%;
+  @include mat.all-component-themes($theme);
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background-color: #f0f2f5;
+  font-family: 'Roboto', 'Inter', sans-serif;
+  color: #1e293b;
+  color-scheme: light;
+}
+
+// Custom Material overrides for premium look
+.mat-mdc-card {
+  border-radius: 2rem !important;
+}
+
+.mat-mdc-button {
+  border-radius: 1rem !important;
+}
+
+.mat-mdc-form-field {
+  width: 100%;
+}

@@ -1,0 +1,470 @@
+import { Component, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ApiService, Transaction, Summary } from './api.service';
+
+// Angular Material Imports
+import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    MatTableModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatInputModule,
+    MatSelectModule,
+    MatSidenavModule,
+    MatToolbarModule,
+    MatSnackBarModule,
+    MatCheckboxModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatProgressSpinnerModule
+  ],
+  template: `
+<div class="h-screen flex flex-col bg-[#f0f2f5]">
+  <!-- TOP TOOLBAR -->
+  <mat-toolbar class="!bg-white !h-20 border-b border-slate-200 px-8 flex justify-between items-center shadow-sm sticky top-0 z-[1000]">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-100 rotate-2">
+        <mat-icon class="scale-125">account_balance</mat-icon>
+      </div>
+      <div>
+        <h1 class="text-2xl font-black text-slate-800 tracking-tight leading-none">mTax <span class="text-indigo-600">Material</span></h1>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Institutional Finance Management</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-4">
+      <button mat-icon-button (click)="loadData()" class="text-slate-400">
+        <mat-icon [class.animate-spin]="loading()">refresh</mat-icon>
+      </button>
+      <div class="h-8 w-px bg-slate-200"></div>
+      <div class="flex flex-col items-end">
+        <span class="text-[10px] font-black text-slate-300 uppercase">Durum</span>
+        <span class="text-xs font-bold text-emerald-500 flex items-center gap-1.5">
+          <span class="w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span> Bağlı
+        </span>
+      </div>
+    </div>
+  </mat-toolbar>
+
+  <mat-sidenav-container class="flex-1 bg-transparent">
+    <mat-sidenav-content class="p-8 max-w-[1600px] mx-auto w-full">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- LEFT: FILTERS & SUMMARY -->
+        <div class="lg:col-span-3 space-y-6">
+          <mat-card class="!rounded-[2.5rem] !shadow-2xl !shadow-slate-200/50 border-none p-2">
+            <mat-card-content class="p-6">
+              <h3 class="text-sm font-black text-slate-400 uppercase tracking-[0.2em] mb-8">Hızlı Filtreleme</h3>
+              
+              <div class="space-y-6">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Mükellef</mat-label>
+                  <mat-select [ngModel]="filters().taxpayer_id" (ngModelChange)="updateFilter('taxpayer_id', $event)">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option *ngFor="let tp of metadata().taxpayers" [value]="tp.id">{{tp.full_name}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>İşlem Tipi</mat-label>
+                  <mat-select [ngModel]="filters().type" (ngModelChange)="updateFilter('type', $event)">
+                    <mat-option [value]="null">Tümü</mat-option>
+                    <mat-option [value]="1">Gelir</mat-option>
+                    <mat-option [value]="-1">Gider</mat-option>
+                  </mat-select>
+                </mat-form-field>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Yıl</mat-label>
+                    <mat-select [ngModel]="filters().year" (ngModelChange)="updateFilter('year', $event)">
+                      <mat-option *ngFor="let y of years" [value]="y">{{y}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Ay</mat-label>
+                    <mat-select [ngModel]="filters().month" (ngModelChange)="updateFilter('month', $event)">
+                      <mat-option [value]="null">Tümü</mat-option>
+                      <mat-option *ngFor="let m of months" [value]="m.code">{{m.name}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <button mat-flat-button color="primary" class="!w-full !py-7 !rounded-2xl !text-lg !font-black !uppercase !tracking-widest !shadow-xl !shadow-indigo-100" (click)="loadData()">
+                  Listele
+                </button>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- NET STATUS CARD -->
+          <div class="bg-gradient-to-br from-indigo-600 via-indigo-700 to-slate-900 p-8 rounded-[2.5rem] shadow-2xl shadow-indigo-200 text-white relative overflow-hidden group">
+            <mat-icon class="absolute -right-8 -bottom-8 !w-40 !h-40 !text-9xl opacity-5 group-hover:rotate-12 transition-transform duration-700">query_stats</mat-icon>
+            <p class="text-[10px] font-black text-indigo-200 uppercase tracking-[0.3em] mb-4">Mevcut Bakıye</p>
+            <h2 class="text-4xl font-black mb-2 tracking-tighter">{{summary().net_income | number:'1.2-2'}} <span class="text-base font-medium opacity-50">TL</span></h2>
+            <div class="w-12 h-1 bg-white/20 rounded-full my-6"></div>
+            <div class="flex justify-between items-center bg-white/5 p-4 rounded-2xl border border-white/10">
+              <span class="text-[10px] font-bold text-indigo-100 uppercase tracking-widest">Matrah</span>
+              <span class="font-black text-sm">{{summary().taxable_income | number:'1.2-2'}} TL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: TABLE & METRICS -->
+        <div class="lg:col-span-9 space-y-8">
+          
+          <!-- TOP DASHBOARD STATS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <mat-card class="!rounded-[2rem] !shadow-xl !shadow-slate-200/50 border-none p-4 hover:translate-y-[-4px] transition-transform">
+              <mat-card-content class="flex items-center justify-between p-4">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Toplam Kazanç</p>
+                  <h3 class="text-3xl font-black text-emerald-600 tracking-tighter">+{{summary().total_income | number:'1.2-2'}} <span class="text-sm">TL</span></h3>
+                </div>
+                <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 shadow-inner">
+                  <mat-icon class="scale-125">trending_up</mat-icon>
+                </div>
+              </mat-card-content>
+            </mat-card>
+
+            <mat-card class="!rounded-[2rem] !shadow-xl !shadow-slate-200/50 border-none p-4 hover:translate-y-[-4px] transition-transform">
+              <mat-card-content class="flex items-center justify-between p-4">
+                <div>
+                  <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Toplam Harcama</p>
+                  <h3 class="text-3xl font-black text-rose-600 tracking-tighter">-{{summary().total_expense | number:'1.2-2'}} <span class="text-sm">TL</span></h3>
+                </div>
+                <div class="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 shadow-inner">
+                  <mat-icon class="scale-125">trending_down</mat-icon>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- DATA TABLE -->
+          <mat-card class="!rounded-[2.5rem] !shadow-2xl !shadow-slate-200/40 border-none overflow-hidden pb-4">
+            <div class="px-8 py-6 flex items-center justify-between border-b border-slate-50">
+              <div class="flex items-center gap-3">
+                <mat-icon class="text-indigo-600">view_list</mat-icon>
+                <h3 class="text-lg font-black text-slate-800">İşlem Hareketleri</h3>
+                <span class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ml-2">{{transactions().length}} Kayıt</span>
+              </div>
+              <button mat-flat-button color="accent" class="!rounded-2xl !bg-slate-900 !text-white !h-12 !px-6 !font-black !uppercase !tracking-widest !shadow-xl !shadow-slate-200 active:scale-95" (click)="openAdd()">
+                <mat-icon>add</mat-icon> Yeni İşlem
+              </button>
+            </div>
+            
+            <div class="overflow-x-auto min-h-[400px]">
+              <table mat-table [dataSource]="transactions()" class="w-full">
+                <!-- Date Column -->
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase !py-6 !pl-8"> Tarih </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 !pl-8 !text-xs !font-bold text-slate-500"> {{tx.transaction_date}} </td>
+                </ng-container>
+
+                <!-- Taxpayer Column -->
+                <ng-container matColumnDef="taxpayer">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase"> Mükellef </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 !text-sm !font-black text-slate-800"> {{tx.taxpayer_name}} </td>
+                </ng-container>
+
+                <!-- Description Column -->
+                <ng-container matColumnDef="description">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase"> Açıklama </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 !text-sm text-slate-500 max-w-[250px] truncate" [title]="tx.description"> {{tx.description}} </td>
+                </ng-container>
+
+                <!-- Amount Column -->
+                <ng-container matColumnDef="amount">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase text-right pr-6"> Tutar </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 text-right pr-6 !text-md !font-black" [ngClass]="tx.type === 1 ? 'text-emerald-600' : 'text-rose-600'">
+                    {{ (tx.type === 1 ? tx.amount : -tx.amount) | number:'1.2-2' }} <span class="text-[10px] opacity-70">TL</span>
+                  </td>
+                </ng-container>
+
+                <!-- Actions Column -->
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef class="!bg-white !text-[10px] !font-black !text-slate-400 !uppercase text-center pr-8"> İşlem </th>
+                  <td mat-cell *matCellDef="let tx" class="!py-4 text-center pr-8">
+                    <div class="flex justify-center gap-1">
+                      <button mat-icon-button (click)="openEdit(tx)" class="!w-9 !h-9 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors">
+                        <mat-icon class="!text-lg">edit</mat-icon>
+                      </button>
+                      <button mat-icon-button (click)="deleteTx(tx.id)" class="!w-9 !h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors">
+                        <mat-icon class="!text-lg">delete</mat-icon>
+                      </button>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover:bg-slate-50/50 transition-colors"></tr>
+              </table>
+
+              <div *ngIf="transactions().length === 0" class="flex flex-col items-center justify-center p-20 text-slate-300">
+                <mat-icon class="!w-16 !h-16 !text-7xl mb-4">move_to_inbox</mat-icon>
+                <p class="font-bold uppercase tracking-widest text-[10px]">Henüz kayıt bulunamadı</p>
+              </div>
+            </div>
+          </mat-card>
+
+        </div>
+      </div>
+    </mat-sidenav-content>
+
+    <!-- RIGHT FORM SIDENAV -->
+    <mat-sidenav #sidenav position="end" mode="over" [opened]="showForm()" (closed)="showForm.set(false)" class="!w-full md:!w-[500px] !border-none !rounded-l-[3rem] !bg-white !shadow-2xl">
+      <div class="p-12 h-screen flex flex-col">
+        <div class="flex items-center gap-5 mb-12">
+            <div class="w-14 h-14 bg-indigo-600 rounded-3xl flex items-center justify-center text-white shadow-2xl shadow-indigo-100 rotate-3">
+                <mat-icon class="scale-125">{{editingTx ? 'draw' : 'post_add'}}</mat-icon>
+            </div>
+            <div>
+                <h2 class="text-3xl font-black text-slate-800 tracking-tight">{{editingTx ? 'Kaydı Güncelle' : 'Yeni Kayıt'}}</h2>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Sistem İşlem Giriş Paneli</p>
+            </div>
+        </div>
+
+        <div class="flex-1 space-y-8 overflow-y-auto pr-2 custom-scroll">
+            
+            <div class="grid grid-cols-2 gap-6">
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                  <mat-label>Mükellef</mat-label>
+                  <mat-select [(ngModel)]="formTx.taxpayer_id">
+                    <mat-option *ngFor="let tp of metadata().taxpayers" [value]="tp.id">{{tp.full_name}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                  <mat-label>İşlem Tipi</mat-label>
+                  <mat-select [(ngModel)]="formTx.type">
+                    <mat-option [value]="1">Gelir</mat-option>
+                    <mat-option [value]="-1">Gider</mat-option>
+                  </mat-select>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+               <mat-label>Tutar (TL)</mat-label>
+               <input matInput type="number" [(ngModel)]="formTx.amount" class="!text-3xl !font-black !text-indigo-600 h-12">
+               <span matSuffix class="font-black text-slate-300 ml-2">TL</span>
+            </mat-form-field>
+
+            <div class="grid grid-cols-3 gap-4">
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                    <mat-label>Gün</mat-label>
+                    <input matInput type="number" [(ngModel)]="formTx.day" min="1" max="31">
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                    <mat-label>Ay</mat-label>
+                    <input matInput type="number" [(ngModel)]="formTx.month" min="1" max="12">
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden text-center">
+                    <mat-label>Yıl</mat-label>
+                    <input matInput type="number" [(ngModel)]="formTx.year">
+                </mat-form-field>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                    <mat-label>Kaynak</mat-label>
+                    <mat-select [(ngModel)]="formTx.source_id">
+                        <mat-option *ngFor="let s of metadata().sources" [value]="s.id">{{s.name}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                    <mat-label>Ödeme Yöntemi</mat-label>
+                    <mat-select [(ngModel)]="formTx.payment_method_id">
+                        <mat-option *ngFor="let p of metadata().payment_methods" [value]="p.id">{{p.method_name}}</mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <mat-form-field appearance="fill" class="w-full !rounded-2xl overflow-hidden">
+                <mat-label>Açıklama</mat-label>
+                <textarea matInput [(ngModel)]="formTx.description" rows="4"></textarea>
+            </mat-form-field>
+
+            <div class="bg-indigo-50/50 p-6 rounded-3xl border border-indigo-100/50 flex items-center gap-4">
+               <mat-checkbox [(ngModel)]="formTx.is_taxable" color="primary" class="scale-125"></mat-checkbox>
+               <div>
+                  <p class="text-xs font-black text-slate-800 uppercase tracking-wide">Beyana Dahil</p>
+                  <p class="text-[10px] text-slate-400 font-medium">Bu işlem vergi hesaplamasına dahil edilsin mi?</p>
+               </div>
+            </div>
+        </div>
+
+        <div class="pt-12 grid grid-cols-2 gap-5">
+            <button mat-stroked-button class="!py-7 !rounded-2xl !text-[10px] !font-black !uppercase !tracking-[0.2em] !text-slate-400" (click)="showForm.set(false)">İptal Et</button>
+            <button mat-flat-button color="primary" class="!py-7 !rounded-2xl !text-[10px] !font-black !uppercase !tracking-[0.2em] !shadow-2xl !shadow-indigo-100" (click)="saveTx()">
+                {{editingTx ? 'Güncelle' : 'Kaydı Tamamla'}}
+            </button>
+        </div>
+      </div>
+    </mat-sidenav>
+  </mat-sidenav-container>
+</div>
+  `,
+  styles: [`
+    :host ::ng-deep {
+        .mat-mdc-form-field-subscript-wrapper { display: none; }
+        .mat-mdc-text-field-wrapper { background-color: #f8fafc !important; }
+        .mat-mdc-form-field-flex { padding: 12px 16px !important; }
+        .mdc-line-ripple { display: none; }
+        .mdc-text-field--filled:not(.mdc-text-field--disabled) { background-color: #f8fafc !important; }
+        
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        
+        table { background: transparent !important; }
+        .mat-mdc-table { background: transparent !important; }
+        .mat-mdc-header-row { height: 70px; border: none; }
+        .mat-mdc-row { height: 75px; border-bottom: 1px solid #f8fafc !important; }
+        .mat-mdc-cell { border-bottom: none !important; }
+        .mat-mdc-header-cell { border-bottom: 2px solid #f8fafc !important; }
+    }
+  `]
+})
+export class App implements OnInit {
+  // Signals for state management (Better for Zoneless Angular)
+  loading = signal(false);
+  showForm = signal(false);
+  editingTx: number | null = null;
+
+  transactions = signal<Transaction[]>([]);
+  summary = signal<Summary>({ total_income: 0, total_expense: 0, taxable_income: 0, net_income: 0 });
+
+  metadata = signal<{
+    taxpayers: any[],
+    sources: any[],
+    payment_methods: any[]
+  }>({
+    taxpayers: [],
+    sources: [],
+    payment_methods: []
+  });
+
+  filters = signal({
+    year: 2026,
+    month: null as number | null,
+    taxpayer_id: null as number | null,
+    type: null as number | null
+  });
+
+  formTx: Transaction = this.initForm();
+  displayedColumns: string[] = ['date', 'taxpayer', 'description', 'amount', 'actions'];
+
+  years = [2026, 2025, 2024, 2023, 2022];
+  months = [
+    { name: 'Ocak', code: 1 }, { name: 'Şubat', code: 2 }, { name: 'Mart', code: 3 },
+    { name: 'Nisan', code: 4 }, { name: 'Mayıs', code: 5 }, { name: 'Haziran', code: 6 },
+    { name: 'Temmuz', code: 7 }, { name: 'Ağustos', code: 8 }, { name: 'Eylül', code: 9 },
+    { name: 'Ekim', code: 10 }, { name: 'Kasım', code: 11 }, { name: 'Aralık', code: 12 }
+  ];
+
+  constructor(private api: ApiService, private snackBar: MatSnackBar) { }
+
+  initForm(): Transaction {
+    const now = new Date();
+    return {
+      taxpayer_id: 0,
+      transaction_date: now.toISOString().split('T')[0],
+      year: now.getFullYear(),
+      month: now.getMonth() + 1,
+      day: now.getDate(),
+      type: -1,
+      source_id: 1,
+      payment_method_id: 1,
+      amount: 0,
+      description: '',
+      is_taxable: true
+    };
+  }
+
+  ngOnInit() {
+    this.api.getMetadata().subscribe(meta => this.metadata.set(meta));
+    this.loadData();
+  }
+
+  loadData() {
+    this.loading.set(true);
+    const currentFilters = this.filters();
+    const params: any = { year: currentFilters.year };
+    if (currentFilters.taxpayer_id) params.taxpayer_id = currentFilters.taxpayer_id;
+    if (currentFilters.type) params.type = currentFilters.type;
+    if (currentFilters.month) params.month = currentFilters.month;
+
+    this.api.getDashboard(params).subscribe({
+      next: (data) => {
+        this.transactions.set(data.transactions);
+        this.summary.set(data.summary);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.snackBar.open('Veri yükleme hatası!', 'Kapat', { duration: 3000 });
+        this.loading.set(false);
+      }
+    });
+  }
+
+  updateFilter(key: string, value: any) {
+    this.filters.update(prev => ({ ...prev, [key]: value }));
+  }
+
+  openAdd() {
+    this.editingTx = null;
+    this.formTx = this.initForm();
+    this.showForm.set(true);
+  }
+
+  openEdit(tx: Transaction) {
+    this.editingTx = tx.id!;
+    this.formTx = { ...tx };
+    this.showForm.set(true);
+  }
+
+  saveTx() {
+    this.formTx.transaction_date = `${this.formTx.year}-${String(this.formTx.month).padStart(2, '0')}-${String(this.formTx.day).padStart(2, '0')}`;
+
+    if (this.editingTx) {
+      this.api.updateTransaction(this.editingTx, this.formTx).subscribe(() => {
+        this.snackBar.open('Kayıt güncellendi!', 'Tamam', { duration: 2000 });
+        this.showForm.set(false);
+        this.loadData();
+      });
+    } else {
+      this.api.addTransaction(this.formTx).subscribe(() => {
+        this.snackBar.open('Yeni kayıt eklendi!', 'Tamam', { duration: 2000 });
+        this.showForm.set(false);
+        this.loadData();
+      });
+    }
+  }
+
+  deleteTx(id: number | undefined) {
+    if (!id || !confirm('Silmek istediğinize emin misiniz?')) return;
+    this.api.deleteTransaction(id).subscribe(() => {
+      this.snackBar.open('Kayıt silindi!', 'Tamam', { duration: 2000 });
+      this.loadData();
+    });
+  }
+}
