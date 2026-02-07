@@ -9,6 +9,7 @@ mTax is a high-performance, modern financial tracking application built with a *
 - **FastAPI Core:** Python-based asynchronous backend for blazing-fast data processing.
 - **Side-Panel Interactions:** All CRUD operations (Create, Edit, Delete) happen in a side-drawer without page reloads.
 - **Advanced Summaries:** Real-time calculation of Net Status, Total Income, Expense, and Taxable Base.
+- **Advanced Filtering:** Powerful multi-criteria filtering by Taxpayer, Transaction Type, Source (multi-select), and Taxable status.
 - **Zoneless Performance:** Optimized for the lowest possible browser overhead in 2026 standards.
 
 ## 🛠 Tech Stack
