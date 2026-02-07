@@ -4,7 +4,7 @@ from datetime import date
 from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, Transaction, TransactionType
 
 # --- APP CONFIG ---
-st.set_page_config(page_title="mTax - Finansal Yönetim", layout="wide")
+st.set_page_config(page_title="mTax - Finansal Yönetim", page_icon="💹", layout="wide")
 
 @st.cache_resource
 def init_core():
@@ -20,6 +20,7 @@ def init_core():
 core = init_core()
 
 # --- SIDEBAR: FILTERS ---
+st.sidebar.markdown("# 💹 mTax v1.2")
 st.sidebar.title("🔍 Filtreler")
 taxpayers = core["tp"].get_all()
 tp_opts = {tp.id: tp.full_name for tp in taxpayers}
