@@ -1,13 +1,29 @@
+# Python
 __pycache__/
-*.pyc
-*.pyo
+*.py[cod]
+*$py.class
 *.pyd
-.DS_Store
 .venv/
-env/
 venv/
 ENV/
+env/
+
+# Data & Config
+backend/.env
+backend/*.db
 .env
+*.bak
+
+# IDEs
 .vscode/
 .idea/
-*.bak
+.DS_Store
+Thumbs.db
+
+# Node / Angular (Recursive covering)
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
