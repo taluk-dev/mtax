@@ -14,6 +14,6 @@ echo [3/3] Waiting for services to initialize...
 echo App will be available at http://localhost:4200
 echo.
 echo To stop the system, simply close the minimized terminal windows.
-timeout /t 10
+timeout /t 5
 start http://localhost:4200
 exit
