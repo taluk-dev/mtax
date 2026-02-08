@@ -73,7 +73,7 @@ export class DashboardComponent implements OnInit {
     });
 
     filters = signal({
-        year: new Date().getFullYear(),
+        year: 'all' as number | null | 'all',
         month: 'all' as number | null | 'all',
         taxpayer_id: 'all' as number | null | 'all',
         type: 'all' as number | null | 'all',
@@ -97,7 +97,15 @@ export class DashboardComponent implements OnInit {
 
     filteredTransactions = computed(() => {
         const term = this.searchTerm().toLowerCase();
-        const txs = this.transactions();
+        const txs = [...this.transactions()].sort((a, b) => {
+            const dateA = new Date(a.transaction_date).getTime();
+            const dateB = new Date(b.transaction_date).getTime();
+            if (dateB !== dateA) return dateB - dateA;
+
+            // İkincil sıralama: Source ID ASC
+            return (a.source_id || 0) - (b.source_id || 0);
+        });
+
         if (!term) return txs;
         return txs.filter(tx =>
             tx.description?.toLowerCase().includes(term) ||
@@ -107,7 +115,13 @@ export class DashboardComponent implements OnInit {
         );
     });
 
-    displayedColumns: string[] = ['date', 'taxpayer', 'source', 'type', 'is_taxable', 'amount', 'actions'];
+    filteredTotalAmount = computed(() => {
+        return this.filteredTransactions().reduce((acc, tx) => {
+            return acc + (tx.type === 1 ? tx.amount : -tx.amount);
+        }, 0);
+    });
+
+    displayedColumns: string[] = ['id', 'date', 'taxpayer', 'source', 'type', 'is_taxable', 'amount', 'actions'];
 
     months = [
         { name: 'Ocak', code: 1 }, { name: 'Şubat', code: 2 }, { name: 'Mart', code: 3 },
@@ -150,7 +164,6 @@ export class DashboardComponent implements OnInit {
             this.metadata.set(meta);
             this.filters.update(f => ({
                 ...f,
-                year: meta.last_year,
                 source_id: meta.sources.map((s: any) => s.id)
             }));
             // loadData is handled by effect
@@ -160,11 +173,14 @@ export class DashboardComponent implements OnInit {
     loadData() {
         this.loading.set(true);
         const currentFilters = this.filters();
-        const params: any = { year: currentFilters.year };
+        const params: any = {};
+        if (currentFilters.year !== 'all' && currentFilters.year !== null) params.year = currentFilters.year;
         if (currentFilters.taxpayer_id !== 'all' && currentFilters.taxpayer_id !== null) params.taxpayer_id = currentFilters.taxpayer_id;
         if (currentFilters.type !== 'all' && currentFilters.type !== null) params.type = currentFilters.type;
         if (currentFilters.month !== 'all' && currentFilters.month !== null) params.month = currentFilters.month;
-        if (currentFilters.source_id && currentFilters.source_id.length > 0) params.source_id = currentFilters.source_id;
+        if (this.isFilterActive('source_id')) {
+            params.source_id = currentFilters.source_id;
+        }
         if (currentFilters.is_taxable !== 'all' && currentFilters.is_taxable !== null) params.is_taxable = currentFilters.is_taxable;
 
         this.api.getDashboard(params).subscribe({
@@ -195,6 +211,31 @@ export class DashboardComponent implements OnInit {
             }
             return { ...prev, source_id: current };
         });
+    }
+
+    isFilterActive(key: string): boolean {
+        const f = this.filters();
+        if (key === 'month') return f.month !== 'all';
+        if (key === 'year') return f.year !== 'all';
+        if (key === 'taxpayer_id') return f.taxpayer_id !== 'all';
+        if (key === 'type') return f.type !== 'all';
+        if (key === 'is_taxable') return f.is_taxable !== 'all';
+        if (key === 'source_id') return f.source_id.length !== this.metadata().sources.length;
+        return false;
+    }
+
+    resetFilter(key: string, event: Event) {
+        if (this.isFilterActive(key)) {
+            event.stopPropagation();
+            if (key === 'month') this.updateFilter('month', 'all');
+            else if (key === 'year') this.updateFilter('year', 'all');
+            else if (key === 'taxpayer_id') this.updateFilter('taxpayer_id', 'all');
+            else if (key === 'type') this.updateFilter('type', 'all');
+            else if (key === 'is_taxable') this.updateFilter('is_taxable', 'all');
+            else if (key === 'source_id') {
+                this.updateFilter('source_id', this.metadata().sources.map(s => s.id));
+            }
+        }
     }
 
     openAdd() {

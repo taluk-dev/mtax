@@ -58,7 +58,7 @@ class Transaction:
     month: Optional[int]
     day: Optional[int]
     type: int 
-    source_id: Optional[int]
+    source_id: int
     payment_method_id: int
     document_id: Optional[int]
     amount: float
@@ -201,7 +201,7 @@ class TransactionService(BaseService):
         if is_taxable is not None:
             query += " AND t.is_taxable = ?"; params.append(1 if is_taxable else 0)
         
-        query += " ORDER BY t.transaction_date DESC, t.id DESC"
+        query += " ORDER BY t.transaction_date DESC, t.source_id ASC, t.id DESC"
         with self.db.get_connection() as conn:
             rows = conn.execute(query, params).fetchall()
             return [dict(row) for row in rows]

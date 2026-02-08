@@ -35,7 +35,7 @@ class TransactionIn(BaseModel):
     month: Optional[int] = None
     day: Optional[int] = None
     type: int
-    source_id: Optional[int] = None
+    source_id: int
     payment_method_id: int
     amount: float
     description: Optional[str] = None

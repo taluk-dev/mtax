@@ -16,6 +16,10 @@
                                 <span
                                     class="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">{{filteredTransactions().length}}
                                     Kayıt</span>
+                                <span
+                                    class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
+                                    Toplam: {{filteredTotalAmount() | number:'1.2-2'}} TL
+                                </span>
                             </div>
                             <mat-icon class="text-indigo-600 cursor-pointer ml-3 hover:scale-110 transition-all"
                                 routerLink="/transaction/new" matTooltip="Yeni İşlem">add_circle</mat-icon>
@@ -24,6 +28,19 @@
 
                     <div class="table-scroll-wrapper">
                         <table mat-table [dataSource]="filteredTransactions()" class="header-filters-table">
+                            <!-- ID Column -->
+                            <ng-container matColumnDef="id">
+                                <th mat-header-cell *matHeaderCellDef class="!py-4">
+                                    <div class="header-cell-content">
+                                        <span
+                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ID</span>
+                                    </div>
+                                </th>
+                                <td mat-cell *matCellDef="let tx" class="text-[10px] font-mono text-slate-400">
+                                    #{{tx.id}}
+                                </td>
+                            </ng-container>
+
                             <!-- Combined Date Column -->
                             <ng-container matColumnDef="date">
                                 <th mat-header-cell *matHeaderCellDef class="!py-4">
@@ -34,16 +51,20 @@
                                             <span [matMenuTriggerFor]="monthMenu"
                                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                                 AY
-                                                <mat-icon
-                                                    class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                                <mat-icon [class.!text-indigo-600]="isFilterActive('month')"
+                                                    (click)="resetFilter('month', $event)"
+                                                    class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('month')
+                                                    ? 'filter_alt' : 'expand_more'}}</mat-icon>
                                             </span>
                                             <span class="text-[10px] text-slate-300 mx-1">/</span>
                                             <!-- Year Filter -->
                                             <span [matMenuTriggerFor]="yearMenu"
                                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                                 YIL
-                                                <mat-icon
-                                                    class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                                <mat-icon [class.!text-indigo-600]="isFilterActive('year')"
+                                                    (click)="resetFilter('year', $event)"
+                                                    class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('year')
+                                                    ? 'filter_alt' : 'expand_more'}}</mat-icon>
                                             </span>
 
                                             <mat-menu #monthMenu="matMenu" class="compact-menu">
@@ -54,6 +75,8 @@
                                             </mat-menu>
 
                                             <mat-menu #yearMenu="matMenu" class="compact-menu">
+                                                <button mat-menu-item
+                                                    (click)="updateFilter('year', 'all')">Tümü</button>
                                                 <button mat-menu-item *ngFor="let y of metadata().years"
                                                     (click)="updateFilter('year', y)">{{y}}</button>
                                             </mat-menu>
@@ -75,7 +98,10 @@
                                         <span [matMenuTriggerFor]="tpMenu"
                                             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                             MÜKELLEF
-                                            <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                            <mat-icon [class.!text-indigo-600]="isFilterActive('taxpayer_id')"
+                                                (click)="resetFilter('taxpayer_id', $event)"
+                                                class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('taxpayer_id')
+                                                ? 'filter_alt' : 'expand_more'}}</mat-icon>
                                         </span>
                                         <mat-menu #tpMenu="matMenu" class="compact-menu">
                                             <button mat-menu-item
@@ -101,7 +127,10 @@
                                         <span [matMenuTriggerFor]="sourceMenu"
                                             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                             KAYNAK
-                                            <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                            <mat-icon [class.!text-indigo-600]="isFilterActive('source_id')"
+                                                (click)="resetFilter('source_id', $event)"
+                                                class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('source_id') ?
+                                                'filter_alt' : 'expand_more'}}</mat-icon>
                                         </span>
                                         <mat-menu #sourceMenu="matMenu" class="compact-menu p-2">
                                             <div class="max-h-[300px] overflow-y-auto custom-scroll">
@@ -132,7 +161,10 @@
                                         <span [matMenuTriggerFor]="typeMenu"
                                             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                             TİP
-                                            <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                            <mat-icon [class.!text-indigo-600]="isFilterActive('type')"
+                                                (click)="resetFilter('type', $event)"
+                                                class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('type') ?
+                                                'filter_alt' : 'expand_more'}}</mat-icon>
                                         </span>
                                         <mat-menu #typeMenu="matMenu" class="compact-menu">
                                             <button mat-menu-item (click)="updateFilter('type', 'all')">Tümü</button>
@@ -155,7 +187,10 @@
                                         <span [matMenuTriggerFor]="taxMenu"
                                             class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
                                             BEYAN
-                                            <mat-icon class="!text-[12px] !w-[12px] !h-[12px]">expand_more</mat-icon>
+                                            <mat-icon [class.!text-indigo-600]="isFilterActive('is_taxable')"
+                                                (click)="resetFilter('is_taxable', $event)"
+                                                class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('is_taxable')
+                                                ? 'filter_alt' : 'expand_more'}}</mat-icon>
                                         </span>
                                         <mat-menu #taxMenu="matMenu" class="compact-menu">
                                             <button mat-menu-item

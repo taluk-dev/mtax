@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	"month"	INTEGER,
 	"day"	INTEGER,
 	"type"	INTEGER,
-	"source_id"	INTEGER,
+	"source_id"	INTEGER NOT NULL,
 	"payment_method_id"	INTEGER,
 	"document_id"	INTEGER,
 	"description"	TEXT,

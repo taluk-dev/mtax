@@ -77,6 +77,7 @@ mtax/
 - **Optimized UI:** Replaced the previous sidenav/drawer system with a full-page transaction form for better focus and data entry speed.
 - **Signal-Driven:** The frontend architecture relies heavily on Angular Signals for reactive state management without Zone.js overhead.
 - **Backend Sync:** The API has been extended to support single-record retrieval for editing and deep-copying transactions.
+- **Data Integrity:** `source_id` is now a **mandatory** field (NOT NULL) in the database and API to ensure every transaction is correctly categorized. Unassigned records should use the 'Belirsiz' source (ID: 8).
 
 ---
 *Developed with focus on performance, aesthetics, and modern web standards.*
