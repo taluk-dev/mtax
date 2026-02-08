@@ -105,12 +105,22 @@
 
                     <!-- Description Area -->
                     <div class="section-full">
-                        <mat-form-field appearance="fill">
-                            <mat-label>İşlem Açıklaması</mat-label>
-                            <textarea matInput [(ngModel)]="formTx.description" rows="3"
-                                placeholder="İşleme dair notlarınızı ekleyin..."></textarea>
-                            <mat-icon matPrefix>segment</mat-icon>
-                        </mat-form-field>
+                        <div class="flex gap-4">
+                            <mat-form-field appearance="fill" class="flex-1">
+                                <mat-label>İşlem Açıklaması</mat-label>
+                                <textarea matInput [(ngModel)]="formTx.description" rows="3"
+                                    placeholder="İşleme dair notlarınızı ekleyin..."></textarea>
+                                <mat-icon matPrefix>segment</mat-icon>
+                            </mat-form-field>
+
+                            <mat-form-field appearance="fill" class="w-1/3">
+                                <mat-label>Vergi Kalem Kodu</mat-label>
+                                <input matInput [(ngModel)]="formTx.tax_item_code" placeholder="Örnekler: 74-6a, 74-8"
+                                    maxlength="10">
+                                <mat-icon matPrefix>code</mat-icon>
+                                <mat-hint>Resmi beyandaki kalem kodu</mat-hint>
+                            </mat-form-field>
+                        </div>
                     </div>
 
                     <!-- Tax Compliance -->

@@ -121,7 +121,7 @@ export class DashboardComponent implements OnInit {
         }, 0);
     });
 
-    displayedColumns: string[] = ['id', 'date', 'taxpayer', 'source', 'type', 'is_taxable', 'amount', 'actions'];
+    displayedColumns: string[] = ['id', 'date', 'taxpayer', 'source', 'type', 'is_taxable', 'tax_item_code', 'amount', 'actions'];
 
     months = [
         { name: 'Ocak', code: 1 }, { name: 'Şubat', code: 2 }, { name: 'Mart', code: 3 },

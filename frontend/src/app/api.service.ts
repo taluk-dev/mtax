@@ -33,6 +33,7 @@ export interface Transaction {
     description?: string;
     document_id?: number;
     is_taxable: boolean;
+    tax_item_code?: string;
     taxpayer_name?: string;
     source_name?: string;
     method_name?: string;

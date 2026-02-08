@@ -96,7 +96,8 @@ export class TransactionFormComponent implements OnInit {
             payment_method_id: 1,
             amount: 0,
             description: '',
-            is_taxable: true
+            is_taxable: true,
+            tax_item_code: ''
         };
     }
 
