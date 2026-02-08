@@ -37,7 +37,6 @@ export interface Transaction {
     taxpayer_name?: string;
     source_name?: string;
     method_name?: string;
-    doc_ref?: string;
     gdrive_id?: string;
 }
 

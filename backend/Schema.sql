@@ -25,7 +25,6 @@ CREATE TABLE IF NOT EXISTS "documents" (
 	"doc_ref"	TEXT,
 	"display_name"	TEXT NOT NULL,
 	"relative_path"	TEXT NOT NULL,
-	"gdrive_id"	TEXT,
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
@@ -44,6 +43,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	"amount"	REAL NOT NULL,
 	"is_taxable"	BOOLEAN DEFAULT FALSE,
 	"tax_item_code"	TEXT,
+	"gdrive_id"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("payment_method_id") REFERENCES "payment_methods"("id"),
 	FOREIGN KEY("source_id") REFERENCES "sources"("id"),

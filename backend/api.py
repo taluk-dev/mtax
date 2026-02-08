@@ -42,6 +42,7 @@ class TransactionIn(BaseModel):
     document_id: Optional[int] = None
     is_taxable: bool = False
     tax_item_code: Optional[str] = None
+    gdrive_id: Optional[str] = None
 
     @model_validator(mode='before')
     @classmethod
@@ -120,7 +121,8 @@ async def add_transaction(tx: TransactionIn):
         amount=tx.amount,
         description=tx.description,
         is_taxable=tx.is_taxable,
-        tax_item_code=tx.tax_item_code
+        tax_item_code=tx.tax_item_code,
+        gdrive_id=tx.gdrive_id
     )
     tx_service.add_transaction(new_tx)
     return {"status": "success"}
@@ -141,7 +143,8 @@ async def update_transaction(tx_id: int, tx: TransactionIn):
         amount=tx.amount,
         description=tx.description,
         is_taxable=tx.is_taxable,
-        tax_item_code=tx.tax_item_code
+        tax_item_code=tx.tax_item_code,
+        gdrive_id=tx.gdrive_id
     )
     tx_service.update_transaction(up_tx)
     return {"status": "updated"}

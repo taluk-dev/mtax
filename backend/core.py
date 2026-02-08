@@ -42,7 +42,6 @@ class Document:
     doc_ref: Optional[str]
     display_name: str
     relative_path: str
-    gdrive_id: Optional[str] = None
     created_at: Optional[str] = None
 
     @property
@@ -65,6 +64,7 @@ class Transaction:
     description: Optional[str] = None
     is_taxable: bool = False
     tax_item_code: Optional[str] = None
+    gdrive_id: Optional[str] = None
 
 # --- DATABASE MANAGER ---
 class Database:
@@ -110,10 +110,10 @@ class PaymentMethodService(BaseService):
 
 class DocumentService(BaseService):
     def add_document(self, d: Document) -> int:
-        query = """INSERT INTO documents (doc_ref, display_name, relative_path, gdrive_id)
-                   VALUES (?, ?, ?, ?)"""
+        query = """INSERT INTO documents (doc_ref, display_name, relative_path)
+                   VALUES (?, ?, ?)"""
         with self.db.get_connection() as conn:
-            cursor = conn.execute(query, (d.doc_ref, d.display_name, d.relative_path, d.gdrive_id))
+            cursor = conn.execute(query, (d.doc_ref, d.display_name, d.relative_path))
             conn.commit()
             return cursor.lastrowid
 
@@ -125,10 +125,10 @@ class DocumentService(BaseService):
 class TransactionService(BaseService):
     def add_transaction(self, t: Transaction):
         query = """INSERT INTO transactions (taxpayer_id, transaction_date, year, month, day, type, source_id, 
-                   payment_method_id, document_id, amount, description, is_taxable, tax_item_code)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                   payment_method_id, document_id, amount, description, is_taxable, tax_item_code, gdrive_id)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         params = (t.taxpayer_id, t.transaction_date, t.year, t.month, t.day, t.type, t.source_id, 
-                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code)
+                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code, t.gdrive_id)
         with self.db.get_connection() as conn:
             conn.execute(query, params)
             conn.commit()
@@ -136,9 +136,9 @@ class TransactionService(BaseService):
     def update_transaction(self, t: Transaction):
         query = """UPDATE transactions SET taxpayer_id=?, transaction_date=?, year=?, month=?, day=?, type=?, 
                    source_id=?, payment_method_id=?, document_id=?, amount=?, description=?, is_taxable=?, 
-                   tax_item_code=? WHERE id=?"""
+                   tax_item_code=?, gdrive_id=? WHERE id=?"""
         params = (t.taxpayer_id, t.transaction_date, t.year, t.month, t.day, t.type, t.source_id, 
-                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code, t.id)
+                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code, t.gdrive_id, t.id)
         with self.db.get_connection() as conn:
             conn.execute(query, params)
             conn.commit()
@@ -174,7 +174,7 @@ class TransactionService(BaseService):
 
     def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
         query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, pm.method_name,
-                          d.doc_ref, d.display_name as doc_name, d.relative_path, d.gdrive_id
+                          d.doc_ref, d.display_name as doc_name, d.relative_path
                    FROM transactions t
                    LEFT JOIN taxpayers tp ON t.taxpayer_id = tp.id
                    LEFT JOIN sources s ON t.source_id = s.id
