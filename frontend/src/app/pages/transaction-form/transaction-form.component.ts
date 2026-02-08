@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
@@ -41,6 +42,13 @@ export class TransactionFormComponent implements OnInit {
     isEdit = false;
     isDuplicate = false;
     txId: number | null = null;
+    amountProxy = ''; // Proxy for Turkish localized input (e.g., "1.250,50")
+    amountError = signal<string | null>(null);
+
+    // Material'ın hata durumunu manuel tetiklemek için matcher
+    amountMatcher: ErrorStateMatcher = {
+        isErrorState: () => !!this.amountError()
+    };
 
     constructor(
         private api: ApiService,
@@ -69,6 +77,7 @@ export class TransactionFormComponent implements OnInit {
             this.api.getTransaction(this.txId).subscribe({
                 next: (tx) => {
                     this.formTx = { ...tx };
+                    this.syncAmountToProxy();
                     if (this.isDuplicate) {
                         delete this.formTx.id;
                         this.txId = null;
@@ -85,6 +94,7 @@ export class TransactionFormComponent implements OnInit {
 
     initForm(): Transaction {
         const now = new Date();
+        this.amountProxy = '';
         return {
             taxpayer_id: 0,
             transaction_date: now.toISOString().split('T')[0],
@@ -108,6 +118,11 @@ export class TransactionFormComponent implements OnInit {
     }
 
     save() {
+        if (this.amountError()) {
+            this.snackBar.open('Lütfen formdaki hataları düzeltin.', 'Kapat', { duration: 3000 });
+            return;
+        }
+
         // Sync full date string
         this.formTx.transaction_date = `${this.formTx.year}-${String(this.formTx.month).padStart(2, '0')}-${String(this.formTx.day).padStart(2, '0')}`;
 
@@ -130,5 +145,54 @@ export class TransactionFormComponent implements OnInit {
 
     cancel() {
         this.router.navigate(['/']);
+    }
+
+    // --- Localized Amount Helpers ---
+    syncAmountToProxy() {
+        if (this.formTx.amount === 0) {
+            this.amountProxy = '';
+        } else {
+            this.amountProxy = this.formTx.amount.toLocaleString('tr-TR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+                useGrouping: false
+            });
+        }
+    }
+
+    updateAmount(value: string) {
+        this.amountProxy = value;
+        this.amountError.set(null); // Clear error on typing
+
+        if (!value) {
+            this.formTx.amount = 0;
+            return;
+        }
+
+        // Sessizce arka planda sayıyı güncelle (sadece virgül-nokta dönüşümü)
+        const clean = value.replace(',', '.');
+        const num = parseFloat(clean);
+        this.formTx.amount = isNaN(num) ? 0 : num;
+    }
+
+    formatAmountOnBlur() {
+        const value = this.amountProxy;
+        if (!value) return;
+
+        // Validasyon: Nokta kullanımı tamamen yasak
+        if (value.includes('.')) {
+            this.amountError.set('Sadece ondalık ayraç için virgül kullanınız. Örnek: 1000000,25');
+            return;
+        }
+
+        // Validasyon: Birden fazla virgül yasak
+        const commaCount = (value.match(/,/g) || []).length;
+        if (commaCount > 1) {
+            this.amountError.set('Birden fazla virgül kullanamazsınız.');
+            return;
+        }
+
+        this.amountError.set(null);
+        this.syncAmountToProxy();
     }
 }

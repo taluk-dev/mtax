@@ -1,154 +1,130 @@
-<div class="page-container">
-    <div class="form-card-wrapper">
-        <!-- Compact Header -->
-        <header class="form-header">
-            <div class="header-left">
-                <button mat-icon-button (click)="cancel()" class="back-btn" matTooltip="İptal ve Geri Dön">
-                    <mat-icon>chevron_left</mat-icon>
-                </button>
-                <div class="title-group">
-                    <p>{{isEdit ? 'Kayıt Güncelleme' : (isDuplicate ? 'Kayıt Kopyalama' : 'Finansal Kayıt Girişi')}}</p>
-                    <h1>{{isEdit ? 'İşlemi Düzenle' : (isDuplicate ? 'İşlemi Kopyala' : 'Yeni İşlem Oluştur')}}</h1>
-                </div>
-            </div>
-            <div class="header-right">
-                <div class="type-indicator" [ngClass]="formTx.type === 1 ? 'income' : 'expense'">
-                    <mat-icon>{{formTx.type === 1 ? 'add_circle' : 'remove_circle'}}</mat-icon>
-                    <span>{{formTx.type === 1 ? 'GELİR HESABI' : 'GİDER HESABI'}}</span>
-                </div>
-            </div>
-        </header>
+<div class="p-8 mx-auto w-full" style="max-width: 800px;">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold m-0">
+                {{isEdit ? 'Kayıt Düzenle' : (isDuplicate ? 'Kopyadan Yeni Kayıt' : 'Yeni Kayıt Oluştur')}}
+            </h1>
+        </div>
+        <button mat-icon-button (click)="cancel()" matTooltip="İptal ve Geri Dön">
+            <mat-icon>close</mat-icon>
+        </button>
+    </div>
 
-        <mat-card class="main-form-card">
-            <mat-card-content>
-                <div class="form-grid">
+    <mat-card>
+        <mat-card-content class="p-6">
+            <div class="grid grid-cols-2 gap-6">
 
-                    <!-- Amount Section - Now More Balanced -->
-                    <div class="section-full amount-section">
-                        <div class="label-group">
-                            <div class="section-label">NET TUTAR</div>
-                            <div class="sub-label">İşlemin toplam para karşılığını giriniz</div>
-                        </div>
-                        <div class="amount-field-container">
-                            <mat-form-field appearance="fill">
-                                <input matInput type="number" [(ngModel)]="formTx.amount" placeholder="0.00"
-                                    autocomplete="off">
-                                <span matSuffix class="currency">TL</span>
-                            </mat-form-field>
-                        </div>
-                    </div>
-
-                    <!-- Main Selection Row -->
-                    <div class="section-half">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Mükellef</mat-label>
-                            <mat-select [(ngModel)]="formTx.taxpayer_id">
-                                <mat-option *ngFor="let tp of metadata().taxpayers" [value]="tp.id">
-                                    {{tp.full_name}}
-                                </mat-option>
-                            </mat-select>
-                            <mat-icon matPrefix>badge</mat-icon>
+                <!-- Üst Satır: Net Tutar (Sol) ve Tarih (Sağ) -->
+                <div class="col-span-2 flex gap-6">
+                    <!-- Net Tutar -->
+                    <div class="w-1/2">
+                        <mat-form-field appearance="outline" class="w-full">
+                            <mat-label>Net Tutar TL</mat-label>
+                            <input matInput type="text" [ngModel]="amountProxy" (ngModelChange)="updateAmount($event)"
+                                (blur)="formatAmountOnBlur()" [errorStateMatcher]="amountMatcher" placeholder="0,00">
+                            <mat-icon matPrefix>payments</mat-icon>
+                            <mat-error *ngIf="amountError()">{{amountError()}}</mat-error>
                         </mat-form-field>
                     </div>
 
-                    <div class="section-half">
-                        <mat-form-field appearance="fill">
-                            <mat-label>İşlem Türü</mat-label>
-                            <mat-select [(ngModel)]="formTx.type">
-                                <mat-option [value]="1" class="!text-emerald-600 font-bold">GELİR</mat-option>
-                                <mat-option [value]="-1" class="!text-rose-600 font-bold">GİDER</mat-option>
-                            </mat-select>
-                            <mat-icon matPrefix>tune</mat-icon>
-                        </mat-form-field>
-                    </div>
-
-                    <!-- Date Selection Row -->
-                    <div class="section-full date-row-box">
-                        <mat-form-field appearance="fill" class="date-field">
+                    <!-- Tarih (Gün, Ay, Yıl) -->
+                    <div class="w-1/2 flex gap-2">
+                        <mat-form-field appearance="outline" class="w-1/3">
                             <mat-label>Gün</mat-label>
                             <input matInput type="number" [(ngModel)]="formTx.day" min="1" max="31">
                         </mat-form-field>
-                        <mat-form-field appearance="fill" class="date-field">
+                        <mat-form-field appearance="outline" class="w-1/3">
                             <mat-label>Ay</mat-label>
                             <input matInput type="number" [(ngModel)]="formTx.month" min="1" max="12">
                         </mat-form-field>
-                        <mat-form-field appearance="fill" class="date-field">
+                        <mat-form-field appearance="outline" class="w-1/3">
                             <mat-label>Yıl</mat-label>
                             <input matInput type="number" [(ngModel)]="formTx.year">
                         </mat-form-field>
                     </div>
+                </div>
 
-                    <!-- Resource and Payment Method -->
-                    <div class="section-half">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Kaynak / Hesap</mat-label>
-                            <mat-select [(ngModel)]="formTx.source_id">
-                                <mat-option *ngFor="let s of filteredFormSources()" [value]="s.id">
-                                    {{s.name}}
-                                </mat-option>
-                            </mat-select>
-                            <mat-icon matPrefix>account_balance</mat-icon>
-                        </mat-form-field>
-                    </div>
+                <!-- Mükellef -->
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Mükellef</mat-label>
+                        <mat-select [(ngModel)]="formTx.taxpayer_id">
+                            <mat-option *ngFor="let tp of metadata().taxpayers" [value]="tp.id">
+                                {{tp.full_name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-icon matPrefix>badge</mat-icon>
+                    </mat-form-field>
+                </div>
 
-                    <div class="section-half">
-                        <mat-form-field appearance="fill">
-                            <mat-label>Ödeme Tipi</mat-label>
-                            <mat-select [(ngModel)]="formTx.payment_method_id">
-                                <mat-option *ngFor="let p of metadata().payment_methods" [value]="p.id">
-                                    {{p.method_name}}
-                                </mat-option>
-                            </mat-select>
-                            <mat-icon matPrefix>credit_card</mat-icon>
-                        </mat-form-field>
-                    </div>
+                <!-- İşlem Türü -->
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>İşlem Türü</mat-label>
+                        <mat-select [(ngModel)]="formTx.type">
+                            <mat-option [value]="1">GELİR</mat-option>
+                            <mat-option [value]="-1">GİDER</mat-option>
+                        </mat-select>
+                        <mat-icon matPrefix>tune</mat-icon>
+                    </mat-form-field>
+                </div>
 
-                    <!-- Description Area -->
-                    <div class="section-full">
-                        <div class="flex gap-4">
-                            <mat-form-field appearance="fill" class="flex-1">
-                                <mat-label>İşlem Açıklaması</mat-label>
-                                <textarea matInput [(ngModel)]="formTx.description" rows="3"
-                                    placeholder="İşleme dair notlarınızı ekleyin..."></textarea>
-                                <mat-icon matPrefix>segment</mat-icon>
-                            </mat-form-field>
+                <!-- Kaynak / Hesap -->
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Kaynak / Hesap</mat-label>
+                        <mat-select [(ngModel)]="formTx.source_id">
+                            <mat-option *ngFor="let s of filteredFormSources()" [value]="s.id">
+                                {{s.name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-icon matPrefix>account_balance</mat-icon>
+                    </mat-form-field>
+                </div>
 
-                            <mat-form-field appearance="fill" class="w-1/3">
-                                <mat-label>Vergi Kalem Kodu</mat-label>
-                                <input matInput [(ngModel)]="formTx.tax_item_code" placeholder="Örnekler: 74-6a, 74-8"
-                                    maxlength="10">
-                                <mat-icon matPrefix>code</mat-icon>
-                                <mat-hint>Resmi beyandaki kalem kodu</mat-hint>
-                            </mat-form-field>
-                        </div>
-                    </div>
+                <!-- Ödeme Tipi -->
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Ödeme Tipi</mat-label>
+                        <mat-select [(ngModel)]="formTx.payment_method_id">
+                            <mat-option *ngFor="let p of metadata().payment_methods" [value]="p.id">
+                                {{p.method_name}}
+                            </mat-option>
+                        </mat-select>
+                        <mat-icon matPrefix>credit_card</mat-icon>
+                    </mat-form-field>
+                </div>
 
-                    <!-- Tax Compliance -->
-                    <div class="section-full">
-                        <div class="compliance-box" (click)="formTx.is_taxable = !formTx.is_taxable">
-                            <div class="compliance-content">
-                                <mat-icon [class.active]="formTx.is_taxable">
-                                    {{formTx.is_taxable ? 'shield_check' : 'help_outline'}}
-                                </mat-icon>
-                                <div class="text">
-                                    <h3>Resmi Beyana Dahil Et</h3>
-                                    <p>Bu kayıt vergi matrahı ve gelir/gider dökümlerinde dikkate alınacaktır.</p>
-                                </div>
-                            </div>
-                            <mat-checkbox [(ngModel)]="formTx.is_taxable" color="primary"
-                                (click)="$event.stopPropagation()"></mat-checkbox>
-                        </div>
+                <!-- Açıklama ve Vergi Kodu -->
+                <div class="col-span-2 flex gap-4">
+                    <mat-form-field appearance="outline" class="w-2/3">
+                        <mat-label>İşlem Açıklaması</mat-label>
+                        <textarea matInput [(ngModel)]="formTx.description" rows="2"></textarea>
+                        <mat-icon matPrefix>segment</mat-icon>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="w-1/3">
+                        <mat-label>Vergi Kalem Kodu</mat-label>
+                        <input matInput [(ngModel)]="formTx.tax_item_code" maxlength="10">
+                        <mat-icon matPrefix>code</mat-icon>
+                    </mat-form-field>
+                </div>
+
+                <!-- Alt İşlemler: Checkbox solda, Butonlar sağda -->
+                <div class="col-span-2 flex items-center justify-between mt-4">
+                    <mat-checkbox [(ngModel)]="formTx.is_taxable" color="primary">
+                        Resmi Beyana Dahil Et
+                    </mat-checkbox>
+                    <div class="flex gap-3">
+                        <button mat-button (click)="cancel()">VAZGEÇ</button>
+                        <button mat-flat-button color="primary" (click)="save()"
+                            [disabled]="loading() || !!amountError()">
+                            {{loading() ? 'İŞLENİYOR...' : 'KAYDET'}}
+                        </button>
                     </div>
                 </div>
-            </mat-card-content>
 
-            <mat-card-actions class="form-actions">
-                <button mat-button (click)="cancel()" class="secondary-btn">VAZGEÇ</button>
-                <button mat-flat-button color="primary" (click)="save()" [disabled]="loading()" class="primary-btn">
-                    <mat-icon *ngIf="!loading()">check_circle</mat-icon>
-                    <span>{{loading() ? 'İŞLENİYOR...' : 'KAYDI ONAYLA VE TAMAMLA'}}</span>
-                </button>
-            </mat-card-actions>
-        </mat-card>
-    </div>
+            </div>
+        </mat-card-content>
+    </mat-card>
 </div>
