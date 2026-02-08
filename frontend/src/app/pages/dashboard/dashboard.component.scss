@@ -187,10 +187,9 @@
         // Hover Effect
         ::ng-deep tr.mat-mdc-row {
             transition: all 0.2s ease;
-            
+
             &:hover {
                 background-color: #fffbeb !important; // amber-50
-                cursor: pointer;
             }
         }
     }

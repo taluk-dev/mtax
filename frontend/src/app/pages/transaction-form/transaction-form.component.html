@@ -95,21 +95,31 @@
                     </mat-form-field>
                 </div>
 
-                <!-- Açıklama ve Vergi Kodu -->
-                <div class="col-span-2 flex gap-4">
-                    <mat-form-field appearance="outline" class="w-2/3">
+                <!-- Açıklama -->
+                <div class="col-span-2">
+                    <mat-form-field appearance="outline" class="w-full">
                         <mat-label>İşlem Açıklaması</mat-label>
                         <textarea matInput [(ngModel)]="formTx.description" rows="2"></textarea>
                         <mat-icon matPrefix>segment</mat-icon>
                     </mat-form-field>
+                </div>
 
-                    <mat-form-field appearance="outline" class="w-1/3">
+                <!-- Referans Bilgileri: Vergi Kodu ve GDrive -->
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
                         <mat-label>Vergi Kalem Kodu</mat-label>
                         <input matInput [(ngModel)]="formTx.tax_item_code" maxlength="10">
                         <mat-icon matPrefix>code</mat-icon>
                     </mat-form-field>
                 </div>
 
+                <div class="col-span-1">
+                    <mat-form-field appearance="outline" class="w-full">
+                        <mat-label>Google Drive Dosyası (ID)</mat-label>
+                        <input matInput [(ngModel)]="formTx.gdrive_id" placeholder="ID veya Link">
+                        <mat-icon matPrefix>cloud</mat-icon>
+                    </mat-form-field>
+                </div>
                 <!-- Alt İşlemler: Checkbox solda, Butonlar sağda -->
                 <div class="col-span-2 flex items-center justify-between mt-4">
                     <mat-checkbox [(ngModel)]="formTx.is_taxable" color="primary">
