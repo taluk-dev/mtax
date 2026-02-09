@@ -10,6 +10,8 @@ mTax provides a high-performance, industrial-grade experience for managing perso
 - **Multi-Mode Forms:** Single, intelligent form component handling Create, Edit, and Duplicate operations with context-aware titles and logic.
 - **FastAPI Core:** Python-based asynchronous backend for blazing-fast data processing and robust API interactions.
 - **Advanced Summaries:** Real-time calculation of Net Status, Total Income, Expense, and Taxable Base directly on the dashboard.
+- **Tax Declaration Logic:** Comprehensive tax calculation module supporting gross-up for net income, exemptions, expense methods (lump-sum vs actual), and progressive tax brackets.
+- **Detailed Tax Breakdown:** Visualizes effective tax rates and exact tax amounts per bracket for full transparency.
 - **Column-Based Filtering:** Powerful multi-criteria filtering integrated into the data table headers for Taxpayer, Type, Source, and Taxable status.
 - **Global Search:** Instant filtering across descriptions, amounts, and taxpayer names.
 
@@ -77,7 +79,12 @@ mtax/
 - **Optimized UI:** Replaced the previous sidenav/drawer system with a full-page transaction form for better focus and data entry speed.
 - **Signal-Driven:** The frontend architecture relies heavily on Angular Signals for reactive state management without Zone.js overhead.
 - **Backend Sync:** The API has been extended to support single-record retrieval for editing and deep-copying transactions.
-- **Data Integrity:** `source_id` is now a **mandatory** field (NOT NULL) in the database and API to ensure every transaction is correctly categorized. Unassigned records should use the 'Belirsiz' source (ID: 8).
+- **Tax Engine:** A dedicated `DeclarationService` (in `core.py`) handles complex logic including:
+    -   **Gross-Up:** Calculates theoretical gross income from net payments (e.g., workplace rent) and derives withholding tax as a credit.
+    -   **Exemption Handling:** Automatically applies residential exemption logic.
+    -   **Expense Allocation:** Supports both lump-sum (15%) and actual expense methods (with proportional deduction logic: `Taxable / Total Income`).
+    -   **Special Deductions:** Auto-fetches flagged expenses (e.g., Health, Education) from the DB and applies a 10% cap based on Safi İrat.
+- **Data Integrity:** `source_id` is mandatory. Added `is_net` and `deduction_type` columns to `sources` to support advanced tax calculations. New tables `tax_settings` and `declarations` store configuration and history.
 
 ---
 *Developed with focus on performance, aesthetics, and modern web standards.*
