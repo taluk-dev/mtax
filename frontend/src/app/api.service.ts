@@ -12,6 +12,7 @@ export interface Source {
     name: string;
     taxpayer_id: number;
     type: number;
+    is_net: number;
 }
 
 export interface PaymentMethod {

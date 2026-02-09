@@ -35,6 +35,7 @@ class Source:
     detail: Optional[str] = None
     default_amount: Optional[float] = None
     type: int = 1 # 1: Income, -1: Expense
+    is_net: int = 0 # 0: Gross (Brüt), 1: Net
 
 @dataclass
 class Document:

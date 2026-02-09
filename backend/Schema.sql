@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS "sources" (
 	"share_percentage"	REAL DEFAULT 1.0,
 	"default_amount"	REAL,
 	"type"	INTEGER DEFAULT 0, -- 1: Income, -1: Expense, 0: Both
+	"is_net"	INTEGER DEFAULT 0, -- 0: Gross, 1: Net
 	PRIMARY KEY("id"),
 	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id")
 );
