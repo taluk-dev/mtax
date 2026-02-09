@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS "sources" (
 CREATE TABLE IF NOT EXISTS "tax_settings" (
 	"year"	INTEGER,
 	"exemption_amount"	REAL,
+	"exemption_limit"	REAL DEFAULT 0,
 	"declaration_limit"	REAL,
 	"lump_sum_rate"	REAL,
 	"withholding_rate"	REAL,

@@ -77,6 +77,7 @@ class TaxSetting:
     lump_sum_rate: float
     withholding_rate: float
     tax_brackets: str # JSON string
+    exemption_limit: float = 0.0
 
 @dataclass
 class Declaration:
@@ -377,6 +378,12 @@ class DeclarationService(BaseService):
 
         # 4. Exemption
         exemption = settings.exemption_amount
+        
+        # New Rule: If Total Income > Exemption Limit (1.2M for 2025), NO exemption.
+        # This applies regardless of expense method.
+        if settings.exemption_limit > 0 and total_income > settings.exemption_limit:
+            exemption = 0.0
+
         # Simplified: Apply exemption
         taxable_income_after_exemption = total_income - exemption
         if taxable_income_after_exemption < 0: taxable_income_after_exemption = 0
@@ -436,7 +443,13 @@ class DeclarationService(BaseService):
             "matrah": matrah,
             "calculated_tax": calculated_tax,
             "tax_breakdown": tax_breakdown,
-            "net_tax_to_pay": net_tax_to_pay
+            "net_tax_to_pay": net_tax_to_pay,
+            
+            # Aliases for Declaration Interface / DB Saving
+            "expense_amount": deductible_expense,
+            "expense_method": method,
+            "tax_base": matrah,
+            "deductions_amount": allowed_special_deduction
         }
 
     def get_special_deductions_from_db(self, taxpayer_id: int, year: int) -> List[Dict]:
