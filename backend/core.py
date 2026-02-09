@@ -36,6 +36,7 @@ class Source:
     default_amount: Optional[float] = None
     type: int = 1 # 1: Income, -1: Expense
     is_net: int = 0 # 0: Gross (Brüt), 1: Net
+    deduction_type: int = 0 # 0: General Expense, 1: Special Deduction
 
 @dataclass
 class Document:
@@ -44,6 +45,7 @@ class Document:
     display_name: str
     relative_path: str
     created_at: Optional[str] = None
+    gdrive_id: Optional[str] = None
 
     @property
     def full_local_path(self) -> str:
@@ -66,6 +68,33 @@ class Transaction:
     is_taxable: bool = False
     tax_item_code: Optional[str] = None
     gdrive_id: Optional[str] = None
+
+@dataclass
+class TaxSetting:
+    year: int
+    exemption_amount: float
+    declaration_limit: float
+    lump_sum_rate: float
+    withholding_rate: float
+    tax_brackets: str # JSON string
+
+@dataclass
+class Declaration:
+    id: Optional[int]
+    taxpayer_id: int
+    year: int
+    name: str
+    expense_method: str # 'lump_sum', 'actual'
+    total_income: float
+    exemption_applied: float
+    expense_amount: float
+    deductions_amount: float
+    tax_base: float
+    calculated_tax: float
+    withholding_tax: float
+    net_tax_to_pay: float
+    status: str # 'draft', 'final'
+    created_at: Optional[str] = None
 
 # --- DATABASE MANAGER ---
 class Database:
@@ -102,6 +131,11 @@ class SourceService(BaseService):
         with self.db.get_connection() as conn:
             rows = conn.execute("SELECT * FROM sources").fetchall()
             return [Source(**dict(row)) for row in rows]
+    
+    def get_source(self, source_id: int) -> Optional[Source]:
+        with self.db.get_connection() as conn:
+            row = conn.execute("SELECT * FROM sources WHERE id=?", (source_id,)).fetchone()
+            return Source(**dict(row)) if row else None
 
 class PaymentMethodService(BaseService):
     def get_all(self) -> List[PaymentMethod]:
@@ -111,10 +145,10 @@ class PaymentMethodService(BaseService):
 
 class DocumentService(BaseService):
     def add_document(self, d: Document) -> int:
-        query = """INSERT INTO documents (doc_ref, display_name, relative_path)
-                   VALUES (?, ?, ?)"""
+        query = """INSERT INTO documents (doc_ref, display_name, relative_path, gdrive_id)
+                   VALUES (?, ?, ?, ?)"""
         with self.db.get_connection() as conn:
-            cursor = conn.execute(query, (d.doc_ref, d.display_name, d.relative_path))
+            cursor = conn.execute(query, (d.doc_ref, d.display_name, d.relative_path, d.gdrive_id))
             conn.commit()
             return cursor.lastrowid
 
@@ -174,7 +208,7 @@ class TransactionService(BaseService):
             return years
 
     def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
-        query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, pm.method_name,
+        query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, s.deduction_type, pm.method_name,
                           d.doc_ref, d.display_name as doc_name, d.relative_path
                    FROM transactions t
                    LEFT JOIN taxpayers tp ON t.taxpayer_id = tp.id
@@ -216,3 +250,205 @@ class TransactionService(BaseService):
             "total_income": income, "total_expense": expense, 
             "taxable_income": taxable, "net_income": income - expense
         }
+
+class TaxSettingService(BaseService):
+    def get_settings(self, year: int) -> Optional[TaxSetting]:
+        with self.db.get_connection() as conn:
+            row = conn.execute("SELECT * FROM tax_settings WHERE year=?", (year,)).fetchone()
+            if row:
+                return TaxSetting(**dict(row))
+            # Fallback defaults for 2025 if not found
+            if year == 2025:
+                # Default Brackets for 2025 (Simple Example, should be updated)
+                # 0-158.000 -> 15%
+                # 158.000 - 380.000 -> 20%
+                # ... Simplified for planning
+                import json
+                brackets = [
+                    {"limit": 158000, "rate": 0.15},
+                    {"limit": 380000, "rate": 0.20},
+                    {"limit": 800000, "rate": 0.27},
+                    {"limit": 1900000, "rate": 0.35},
+                    {"limit": 999999999, "rate": 0.40}
+                ]
+                return TaxSetting(
+                    year=2025,
+                    exemption_amount=47000.0,
+                    declaration_limit=330000.0,
+                    lump_sum_rate=0.15,
+                    withholding_rate=0.20,
+                    tax_brackets=json.dumps(brackets)
+                )
+            return None
+
+    def save_settings(self, s: TaxSetting):
+        query = """INSERT OR REPLACE INTO tax_settings (year, exemption_amount, declaration_limit, lump_sum_rate, withholding_rate, tax_brackets)
+                   VALUES (?, ?, ?, ?, ?, ?)"""
+        with self.db.get_connection() as conn:
+            conn.execute(query, (s.year, s.exemption_amount, s.declaration_limit, s.lump_sum_rate, s.withholding_rate, s.tax_brackets))
+            conn.commit()
+
+class DeclarationService(BaseService):
+    def save_declaration(self, d: Declaration):
+        query = """INSERT INTO declarations (taxpayer_id, year, name, expense_method, total_income, 
+                   exemption_applied, expense_amount, deductions_amount, tax_base, calculated_tax, 
+                   withholding_tax, net_tax_to_pay, status)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+        params = (d.taxpayer_id, d.year, d.name, d.expense_method, d.total_income, d.exemption_applied,
+                  d.expense_amount, d.deductions_amount, d.tax_base, d.calculated_tax, d.withholding_tax,
+                  d.net_tax_to_pay, d.status)
+        with self.db.get_connection() as conn:
+            conn.execute(query, params)
+            conn.commit()
+
+    def get_declarations(self, taxpayer_id: int, year: int) -> List[Declaration]:
+        with self.db.get_connection() as conn:
+            rows = conn.execute("SELECT * FROM declarations WHERE taxpayer_id=? AND year=?", (taxpayer_id, year)).fetchall()
+            return [Declaration(**dict(row)) for row in rows]
+    
+    def calculate_tax_liability(self, tax_base: float, brackets: List[Dict]) -> Tuple[float, List[Dict]]:
+        # Calculates progressive tax and returns (total_tax, breakdown)
+        tax = 0.0
+        previous_limit = 0.0
+        remaining_base = tax_base
+        breakdown = []
+
+        for b in brackets:
+            limit = b['limit']
+            rate = b['rate']
+            
+            taxable_in_bracket = min(remaining_base, limit - previous_limit)
+            if taxable_in_bracket <= 0:
+                break
+            
+            bracket_tax = taxable_in_bracket * rate
+            tax += bracket_tax
+            breakdown.append({
+                "rate": rate,
+                "base": taxable_in_bracket,
+                "tax": bracket_tax
+            })
+            
+            remaining_base -= taxable_in_bracket
+            previous_limit = limit
+            
+            if remaining_base <= 0:
+                break
+        
+        return tax, breakdown
+
+    def calculate(self, taxpayer_id: int, year: int, method: str, other_deductions: List[Dict]) -> Dict:
+        # 1. Get Settings
+        ts_service = TaxSettingService(self.db)
+        settings = ts_service.get_settings(year)
+        if not settings:
+            raise ValueError(f"Tax settings for {year} not found")
+
+        # 2. Get Transactions
+        tx_service = TransactionService(self.db)
+        src_service = SourceService(self.db)
+        # Fetch all income and expenses for this taxpayer/year
+        transactions = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id)
+        
+        # 3. Income Calculation (Gross Up)
+        total_income = 0.0
+        total_withholding = 0.0
+        
+        # Helper to group by source
+        source_incomes = {} # source_id -> amount
+        # Also need source details
+        sources_map = {s.id: s for s in src_service.get_all()}
+
+        for t in transactions:
+            if t['type'] == TransactionType.INCOME:
+                source_incomes[t['source_id']] = source_incomes.get(t['source_id'], 0.0) + t['amount']
+
+        for sid, amount in source_incomes.items():
+            source = sources_map.get(sid)
+            if not source: continue
+            
+            if source.is_net == 1:
+                gross = amount / (1 - settings.withholding_rate)
+                withholding = gross - amount
+                total_income += gross
+                total_withholding += withholding
+            else:
+                total_income += amount
+
+        # 4. Exemption
+        exemption = settings.exemption_amount
+        # Simplified: Apply exemption
+        taxable_income_after_exemption = total_income - exemption
+        if taxable_income_after_exemption < 0: taxable_income_after_exemption = 0
+
+        # 5. Safi Irat (Expense Deduction)
+        total_general_expenses = 0.0
+        
+        # Find Actual Expenses (Type 0)
+        for t in transactions:
+            if t['type'] == TransactionType.EXPENSE:
+                src = sources_map.get(t['source_id'])
+                if src and src.deduction_type == 0:
+                    total_general_expenses += t['amount']
+
+        deductible_expense = 0.0
+        expense_ratio = 1.0
+
+        if method == 'lump_sum':
+            deductible_expense = taxable_income_after_exemption * settings.lump_sum_rate
+        elif method == 'actual':
+            if total_income > 0:
+                expense_ratio = taxable_income_after_exemption / total_income
+            else:
+                expense_ratio = 0
+            deductible_expense = total_general_expenses * expense_ratio
+
+        safi_irat = taxable_income_after_exemption - deductible_expense
+        if safi_irat < 0: safi_irat = 0
+
+        # 6. Matrah (Special Deductions)
+        total_special_deductions = sum(d['amount'] for d in other_deductions)
+        
+        # Limit Logic: 10% of Safi Irat
+        allowed_special_deduction = min(total_special_deductions, safi_irat * 0.10)
+        
+        matrah = safi_irat - allowed_special_deduction
+        if matrah < 0: matrah = 0
+
+        # 7. Tax Calculation
+        import json
+        brackets = json.loads(settings.tax_brackets)
+        calculated_tax, tax_breakdown = self.calculate_tax_liability(matrah, brackets)
+        
+        net_tax_to_pay = calculated_tax - total_withholding
+
+        return {
+            "total_income": total_income,
+            "exemption_applied": exemption,
+            "withholding_tax": total_withholding,
+            "method": method,
+            "total_general_expenses_actual": total_general_expenses,
+            "expense_ratio": expense_ratio,
+            "deductible_expense": deductible_expense,
+            "safi_irat": safi_irat,
+            "total_special_deductions": total_special_deductions,
+            "allowed_special_deduction": allowed_special_deduction,
+            "matrah": matrah,
+            "calculated_tax": calculated_tax,
+            "tax_breakdown": tax_breakdown,
+            "net_tax_to_pay": net_tax_to_pay
+        }
+
+    def get_special_deductions_from_db(self, taxpayer_id: int, year: int) -> List[Dict]:
+        """Fetches transactions that are marked as Special Deduction (deduction_type=1)"""
+        # We need to join transactions with sources to check deduction_type
+        query = """
+            SELECT s.name, SUM(t.amount) as amount 
+            FROM transactions t
+            JOIN sources s ON t.source_id = s.id
+            WHERE t.taxpayer_id = ? AND t.year = ? AND t.type = -1 AND s.deduction_type = 1
+            GROUP BY s.name
+        """
+        with self.db.get_connection() as conn:
+            rows = conn.execute(query, (taxpayer_id, year)).fetchall()
+            return [{"name": row['name'], "amount": row['amount']} for row in rows]

@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 
 # core.py içerisindeki mevcut servisleri kullanıyoruz
-from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, Transaction, Document
+from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, DeclarationService, TaxSettingService, Transaction, Document, Declaration, TaxSetting
 
 app = FastAPI(title="mTax API", version="2.0.0")
 
@@ -26,6 +26,8 @@ src_service = SourceService(db)
 tx_service = TransactionService(db)
 pm_service = PaymentMethodService(db)
 doc_service = DocumentService(db)
+dec_service = DeclarationService(db)
+ts_service = TaxSettingService(db)
 
 # --- SCHEMAS (Pydantic models for API) ---
 class TransactionIn(BaseModel):
@@ -74,6 +76,39 @@ class DocumentIn(BaseModel):
     display_name: str
     relative_path: str
     gdrive_id: Optional[str] = None
+
+class TaxSettingIn(BaseModel):
+    year: int
+    exemption_amount: float
+    declaration_limit: float
+    lump_sum_rate: float
+    withholding_rate: float
+    tax_brackets: str # JSON
+
+class SpecialDeductionIn(BaseModel):
+    name: str # e.g. "Health", "Education"
+    amount: float
+
+class CalculateRequest(BaseModel):
+    taxpayer_id: int
+    year: int
+    method: str
+    other_deductions: List[SpecialDeductionIn]
+
+class DeclarationIn(BaseModel):
+    taxpayer_id: int
+    year: int
+    name: str
+    expense_method: str
+    total_income: float
+    exemption_applied: float
+    expense_amount: float
+    deductions_amount: float
+    tax_base: float
+    calculated_tax: float
+    withholding_tax: float
+    net_tax_to_pay: float
+    status: str
 
 # --- ENDPOINTS ---
 
@@ -172,6 +207,69 @@ async def add_document(doc: DocumentIn):
     )
     doc_id = doc_service.add_document(new_doc)
     return {"document_id": doc_id}
+
+# --- Tax Settings Endpoints ---
+@app.get("/tax-settings/{year}")
+async def get_tax_settings(year: int):
+    settings = ts_service.get_settings(year)
+    if not settings:
+        # Return empty or construct default structure if service returns None for non-2025?
+        # Service logic handles defaults for 2025.
+        return {}
+    return settings
+
+@app.post("/tax-settings")
+async def save_tax_settings(s: TaxSettingIn):
+    new_s = TaxSetting(
+        year=s.year,
+        exemption_amount=s.exemption_amount,
+        declaration_limit=s.declaration_limit,
+        lump_sum_rate=s.lump_sum_rate,
+        withholding_rate=s.withholding_rate,
+        tax_brackets=s.tax_brackets
+    )
+    ts_service.save_settings(new_s)
+    return {"status": "saved"}
+
+# --- Declaration Endpoints ---
+@app.post("/declarations/calculate")
+async def calculate_declaration(req: CalculateRequest):
+    try:
+        # Convert Pydantic list to dict list for service
+        deductions = [d.dict() for d in req.other_deductions]
+        result = dec_service.calculate(req.taxpayer_id, req.year, req.method, deductions)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/declarations")
+async def save_declaration(d: DeclarationIn):
+    new_dec = Declaration(
+        id=None,
+        taxpayer_id=d.taxpayer_id,
+        year=d.year,
+        name=d.name,
+        expense_method=d.expense_method,
+        total_income=d.total_income,
+        exemption_applied=d.exemption_applied,
+        expense_amount=d.expense_amount,
+        deductions_amount=d.deductions_amount,
+        tax_base=d.tax_base,
+        calculated_tax=d.calculated_tax,
+        withholding_tax=d.withholding_tax,
+        net_tax_to_pay=d.net_tax_to_pay,
+        status=d.status
+    )
+    dec_service.save_declaration(new_dec)
+    return {"status": "saved"}
+
+@app.get("/declarations/special-deductions/{taxpayer_id}/{year}")
+async def get_special_deductions_api(taxpayer_id: int, year: int):
+    return dec_service.get_special_deductions_from_db(taxpayer_id, year)
+    
+@app.get("/declarations/list/{taxpayer_id}/{year}")
+async def list_declarations(taxpayer_id: int, year: int):
+    return dec_service.get_declarations(taxpayer_id, year)
 
 if __name__ == "__main__":
     uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)

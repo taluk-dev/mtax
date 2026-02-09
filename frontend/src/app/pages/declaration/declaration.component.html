@@ -1,0 +1,197 @@
+<div class="declaration-container">
+    <div class="header">
+        <h1>Beyanname Hesaplama</h1>
+        <div class="selectors">
+            <mat-form-field appearance="outline">
+                <mat-label>Mükellef Seçin</mat-label>
+                <mat-select [value]="selectedTaxpayerId()" (selectionChange)="selectedTaxpayerId.set($event.value)">
+                    <mat-option *ngFor="let tp of taxpayers()" [value]="tp.id">
+                        {{tp.full_name}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Yıl Seçin</mat-label>
+                <mat-select [value]="selectedYear()" (selectionChange)="selectedYear.set($event.value)">
+                    <mat-option *ngFor="let y of years()" [value]="y">
+                        {{y}}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
+        </div>
+    </div>
+
+    <div class="content-grid">
+        <!-- Sidebar: History -->
+        <mat-card class="history-card">
+            <mat-card-header>
+                <mat-card-title>Geçmiş Beyannameler</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <mat-list>
+                    <mat-list-item *ngFor="let d of declarations()" (click)="viewDeclaration(d)">
+                        <span matListItemTitle>{{ d.name }}</span>
+                        <span matListItemLine>{{ d.created_at | date:'short' }}</span>
+                        <span matListItemMeta>{{ d.net_tax_to_pay | currency:'TRY':'symbol-narrow':'1.0-2' }}</span>
+                    </mat-list-item>
+                    <p *ngIf="declarations().length === 0" class="no-data">Kayıtlı beyanname yok.</p>
+                </mat-list>
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Main: Calculation Form -->
+        <mat-card class="calc-card">
+            <mat-card-header>
+                <mat-card-title>Hesaplama Parametreleri</mat-card-title>
+            </mat-card-header>
+            <mat-card-content [formGroup]="form">
+
+                <div class="method-section">
+                    <h3>Gider Yöntemi:</h3>
+                    <mat-radio-group formControlName="method" aria-label="Gider Yöntemi">
+                        <mat-radio-button value="lump_sum">Götürü Gider (%15)</mat-radio-button>
+                        <mat-radio-button value="actual">Gerçek Gider</mat-radio-button>
+                    </mat-radio-group>
+                </div>
+
+                <div class="deductions-section">
+                    <h3>Özel İndirimler (Matrahtan Düşülecek)</h3>
+                    <div formArrayName="specialDeductions">
+                        <div *ngFor="let d of specialDeductions.controls; let i=index" [formGroupName]="i"
+                            class="deduction-row">
+                            <mat-form-field appearance="outline" class="small-input">
+                                <mat-label>Tür (Örn: Sağlık)</mat-label>
+                                <input matInput formControlName="name">
+                            </mat-form-field>
+                            <mat-form-field appearance="outline" class="small-input">
+                                <mat-label>Tutar</mat-label>
+                                <input matInput type="number" formControlName="amount">
+                            </mat-form-field>
+                            <button mat-icon-button color="warn" (click)="removeDeduction(i)">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </div>
+                    </div>
+                    <button mat-stroked-button (click)="addDeduction()">
+                        <mat-icon>add</mat-icon> İndirim Ekle
+                    </button>
+                </div>
+
+                <mat-divider></mat-divider>
+
+                <div class="actions">
+                    <mat-form-field appearance="outline">
+                        <mat-label>Beyanname Adı</mat-label>
+                        <input matInput formControlName="declarationName">
+                    </mat-form-field>
+                    <button mat-raised-button color="primary" (click)="calculate()"
+                        [disabled]="loading()">HESAPLA</button>
+                </div>
+
+            </mat-card-content>
+        </mat-card>
+
+        <!-- Results -->
+        <mat-card class="result-card" *ngIf="result()">
+            <mat-card-header>
+                <mat-card-title>Hesaplama Sonucu</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+                <table class="result-table">
+                    <tr>
+                        <td>Toplam Gelir (Brüt):</td>
+                        <td class="amount">{{ result()?.total_income | currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                    <tr>
+                        <td>İstisna Tutarı:</td>
+                        <td class="amount text-warn">-{{ result()?.exemption_applied |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                    <tr class="sub-total">
+                        <td>Vergiye Tabi Hasılat:</td>
+                        <td class="amount">{{ (result()?.total_income || 0) - (result()?.exemption_applied || 0) |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+
+                    <tr *ngIf="result()?.expense_method === 'actual'">
+                        <td>Gerçek Gider Toplamı:</td>
+                        <td class="amount">{{ result()?.total_general_expenses_actual |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                    <tr *ngIf="result()?.expense_method === 'actual'">
+                        <td>Gider İndirim Oranı:</td>
+                        <td class="amount">%{{ (result()?.expense_ratio || 0) * 100 | number:'1.2-2' }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>İndirilecek Gider ({{result()?.expense_method === 'lump_sum' ? 'Götürü' : 'Gerçek'}}):</td>
+                        <td class="amount text-warn">-{{ result()?.expense_amount |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                    <tr class="sub-total">
+                        <td>Safi İrat:</td>
+                        <td class="amount">{{ result()?.safi_irat | currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Özel İndirimler (Toplam):</td>
+                        <td class="amount">{{ result()?.total_special_deductions |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Özel İndirim (İndirilen): <small>(%10 Limit)</small></td>
+                        <td class="amount text-warn">-{{ result()?.allowed_special_deduction |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+
+                    <tr class="main-total">
+                        <td>VERGİ MATRAHI:</td>
+                        <td class="amount">{{ result()?.tax_base | currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+
+                    <tr>
+                        <td>Hesaplanan Vergi:</td>
+                        <td class="amount text-danger">
+                            {{ result()?.calculated_tax | currency:'TRY':'symbol-narrow':'1.2-2' }}
+                            <small class="effective-rate" *ngIf="(result()?.matrah || 0) > 0">
+                                (%{{ ((result()?.calculated_tax || 0) / (result()?.matrah || 1)) * 100 |
+                                number:'1.2-2' }})
+                            </small>
+                        </td>
+                    </tr>
+
+                    <!-- Breakdown -->
+                    <tr *ngIf="result()?.tax_breakdown && result()?.tax_breakdown!.length > 0">
+                        <td colspan="2" class="breakdown-cell">
+                            <div class="breakdown-container">
+                                <span class="breakdown-title">Vergi Dilimi Detayı:</span>
+                                <div *ngFor="let b of result()?.tax_breakdown" class="breakdown-item">
+                                    <span class="rate">%{{ b.rate * 100 }}</span>
+                                    <span class="base">{{ b.base | currency:'TRY':'symbol-narrow':'1.0-0' }}</span>
+                                    <mat-icon>arrow_right_alt</mat-icon>
+                                    <span class="tax">{{ b.tax | currency:'TRY':'symbol-narrow':'1.2-2' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td>Kesinti Yoluyla Ödenen (Stopaj):</td>
+                        <td class="amount text-success">-{{ result()?.withholding_tax |
+                            currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+
+                    <tr class="final-total">
+                        <td>ÖDENECEK VERGİ:</td>
+                        <td class="amount">{{ result()?.net_tax_to_pay | currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
+                    </tr>
+                </table>
+            </mat-card-content>
+            <mat-card-actions align="end">
+                <button mat-button (click)="save('draft')">Taslak Kaydet</button>
+                <button mat-raised-button color="accent" (click)="save('final')">Kesinleştir</button>
+            </mat-card-actions>
+        </mat-card>
+    </div>
+</div>

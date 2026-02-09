@@ -1,0 +1,219 @@
+.declaration-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h1 {
+        margin: 0;
+        font-size: 24px;
+        color: #333;
+    }
+
+    .selectors {
+        display: flex;
+        gap: 16px;
+
+        mat-form-field {
+            width: 200px;
+        }
+    }
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 250px 1fr 350px;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 1000px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+mat-card {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.history-card {
+    height: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.calc-card {
+    .method-section {
+        margin-bottom: 20px;
+
+        h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+
+        mat-radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+
+    .deductions-section {
+        margin-top: 20px;
+
+        h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .deduction-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+
+            .small-input {
+                width: 140px;
+            }
+        }
+    }
+
+    .actions {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        margin-top: 20px;
+        justify-content: flex-end;
+    }
+}
+
+.result-card {
+    background-color: #f9fafb;
+    border: 1px solid #e0e0e0;
+
+    .result-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        td {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .amount {
+            text-align: right;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 500;
+        }
+
+        .sub-total {
+            font-weight: 600;
+
+            td {
+                border-top: 2px solid #ddd;
+            }
+        }
+
+        .main-total {
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #1976d2;
+
+            td {
+                border-top: 2px solid #1976d2;
+                border-bottom: 2px solid #1976d2;
+                padding: 12px 0;
+            }
+        }
+
+        .final-total {
+            font-size: 1.2em;
+            font-weight: 800;
+            color: #d32f2f;
+
+            td {
+                border-top: 3px double #d32f2f;
+                padding: 15px 0;
+            }
+        }
+
+        .text-warn {
+            color: #f57c00;
+        }
+
+        .text-danger {
+            color: #d32f2f;
+        }
+
+        .text-success {
+            color: #388e3c;
+        }
+
+        .effective-rate {
+            display: block;
+            font-size: 0.7em;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .breakdown-cell {
+            padding: 0 !important;
+            border-bottom: 2px solid #ddd !important;
+        }
+
+        .breakdown-container {
+            background-color: #f1f5f9;
+            padding: 10px 15px;
+            font-size: 0.85em;
+
+            .breakdown-title {
+                display: block;
+                font-weight: 600;
+                color: #475569;
+                margin-bottom: 6px;
+                text-decoration: underline;
+            }
+
+            .breakdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 2px 0;
+                color: #64748b;
+
+                .rate {
+                    font-weight: 700;
+                    width: 40px;
+                }
+
+                .base {
+                    font-family: 'Roboto Mono', monospace;
+                    width: 80px;
+                    text-align: right;
+                }
+
+                mat-icon {
+                    font-size: 14px;
+                    width: 14px;
+                    height: 14px;
+                    color: #cbd5e1;
+                }
+
+                .tax {
+                    font-family: 'Roboto Mono', monospace;
+                    font-weight: 600;
+                    color: #0f172a;
+                    margin-left: auto;
+                }
+            }
+        }
+    }
+}

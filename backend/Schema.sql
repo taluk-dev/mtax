@@ -13,7 +13,36 @@ CREATE TABLE IF NOT EXISTS "sources" (
 	"default_amount"	REAL,
 	"type"	INTEGER DEFAULT 0, -- 1: Income, -1: Expense, 0: Both
 	"is_net"	INTEGER DEFAULT 0, -- 0: Gross, 1: Net
+	"deduction_type"	INTEGER DEFAULT 0, -- 0: General Expense (Safi İrat), 1: Special Deduction (Matrah)
 	PRIMARY KEY("id"),
+	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id")
+);
+CREATE TABLE IF NOT EXISTS "tax_settings" (
+	"year"	INTEGER,
+	"exemption_amount"	REAL,
+	"declaration_limit"	REAL,
+	"lump_sum_rate"	REAL,
+	"withholding_rate"	REAL,
+	"tax_brackets"	TEXT, -- JSON: [{"limit": 110000, "rate": 0.15}, ...]
+	PRIMARY KEY("year")
+);
+CREATE TABLE IF NOT EXISTS "declarations" (
+	"id"	INTEGER,
+	"taxpayer_id"	INTEGER,
+	"year"	INTEGER,
+	"name"	TEXT,
+	"expense_method"	TEXT, -- 'lump_sum', 'actual'
+	"total_income"	REAL,
+	"exemption_applied"	REAL,
+	"expense_amount"	REAL,
+	"deductions_amount"	REAL,
+	"tax_base"	REAL,
+	"calculated_tax"	REAL,
+	"withholding_tax"	REAL,
+	"net_tax_to_pay"	REAL,
+	"status"	TEXT, -- 'draft', 'final'
+	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id")
 );
 CREATE TABLE IF NOT EXISTS "taxpayers" (

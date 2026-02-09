@@ -53,6 +53,54 @@ export interface DashboardData {
     summary: Summary;
 }
 
+export interface TaxSetting {
+    year: number;
+    exemption_amount: number;
+    declaration_limit: number;
+    lump_sum_rate: number;
+    withholding_rate: number;
+    tax_brackets: string;
+}
+
+export interface SpecialDeduction {
+    name: string;
+    amount: number;
+}
+
+export interface CalculateRequest {
+    taxpayer_id: number;
+    year: number;
+    method: string;
+    other_deductions: SpecialDeduction[];
+}
+
+export interface Declaration {
+    id?: number;
+    taxpayer_id: number;
+    year: number;
+    name: string;
+    expense_method: string;
+    total_income: number;
+    exemption_applied: number;
+    expense_amount: number;
+    deductions_amount: number;
+    tax_base: number;
+    calculated_tax: number;
+    withholding_tax: number;
+    net_tax_to_pay: number;
+    status: string;
+    created_at?: string;
+
+    // UI Helpers (Optional)
+    expense_ratio?: number;
+    safi_irat?: number;
+    allowed_special_deduction?: number;
+    total_general_expenses_actual?: number;
+    total_special_deductions?: number;
+    tax_breakdown?: { rate: number, base: number, tax: number }[];
+    matrah?: number;
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -87,5 +135,31 @@ export class ApiService {
 
     addDocument(doc: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/documents`, doc);
+    }
+
+    // --- Tax Settings ---
+    getTaxSettings(year: number): Observable<TaxSetting> {
+        return this.http.get<TaxSetting>(`${this.apiUrl}/tax-settings/${year}`);
+    }
+
+    saveTaxSettings(settings: TaxSetting): Observable<any> {
+        return this.http.post(`${this.apiUrl}/tax-settings`, settings);
+    }
+
+    // --- Declarations ---
+    calculateDeclaration(req: CalculateRequest): Observable<Declaration> {
+        return this.http.post<Declaration>(`${this.apiUrl}/declarations/calculate`, req);
+    }
+
+    saveDeclaration(dec: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/declarations`, dec);
+    }
+
+    getSpecialDeductions(taxpayerId: number, year: number): Observable<SpecialDeduction[]> {
+        return this.http.get<SpecialDeduction[]>(`${this.apiUrl}/declarations/special-deductions/${taxpayerId}/${year}`);
+    }
+
+    getDeclarations(taxpayerId: number, year: number): Observable<Declaration[]> {
+        return this.http.get<Declaration[]>(`${this.apiUrl}/declarations/list/${taxpayerId}/${year}`);
     }
 }

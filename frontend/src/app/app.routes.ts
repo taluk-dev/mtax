@@ -7,5 +7,6 @@ export const routes: Routes = [
     { path: 'transaction/new', component: TransactionFormComponent },
     { path: 'transaction/edit/:id', component: TransactionFormComponent },
     { path: 'transaction/duplicate/:id', component: TransactionFormComponent },
+    { path: 'declaration', loadComponent: () => import('./pages/declaration/declaration.component').then(m => m.DeclarationComponent) },
     { path: '**', redirectTo: '' }
 ];
