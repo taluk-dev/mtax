@@ -13,6 +13,10 @@ export interface Source {
     taxpayer_id: number;
     type: number;
     is_net: number;
+    share_percentage?: number;
+    detail?: string;
+    default_amount?: number;
+    deduction_type?: number;
 }
 
 export interface PaymentMethod {
@@ -135,6 +139,59 @@ export class ApiService {
 
     addDocument(doc: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/documents`, doc);
+    }
+
+
+
+    // --- Taxpayers ---
+    getTaxpayers(): Observable<Taxpayer[]> {
+        return this.http.get<Taxpayer[]>(`${this.apiUrl}/taxpayers`);
+    }
+
+    addTaxpayer(tp: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/taxpayers`, tp);
+    }
+
+    updateTaxpayer(id: number, tp: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/taxpayers/${id}`, tp);
+    }
+
+    deleteTaxpayer(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/taxpayers/${id}`);
+    }
+
+    // --- Sources ---
+    getSources(): Observable<Source[]> {
+        return this.http.get<Source[]>(`${this.apiUrl}/sources`);
+    }
+
+    addSource(src: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/sources`, src);
+    }
+
+    updateSource(id: number, src: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/sources/${id}`, src);
+    }
+
+    deleteSource(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/sources/${id}`);
+    }
+
+    // --- Payment Methods ---
+    getPaymentMethods(): Observable<PaymentMethod[]> {
+        return this.http.get<PaymentMethod[]>(`${this.apiUrl}/payment-methods`);
+    }
+
+    addPaymentMethod(pm: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/payment-methods`, pm);
+    }
+
+    updatePaymentMethod(id: number, pm: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/payment-methods/${id}`, pm);
+    }
+
+    deletePaymentMethod(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/payment-methods/${id}`);
     }
 
     // --- Tax Settings ---

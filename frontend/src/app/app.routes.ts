@@ -8,5 +8,18 @@ export const routes: Routes = [
     { path: 'transaction/edit/:id', component: TransactionFormComponent },
     { path: 'transaction/duplicate/:id', component: TransactionFormComponent },
     { path: 'declaration', loadComponent: () => import('./pages/declaration/declaration.component').then(m => m.DeclarationComponent) },
+    { path: 'transaction/duplicate/:id', component: TransactionFormComponent },
+    { path: 'declaration', loadComponent: () => import('./pages/declaration/declaration.component').then(m => m.DeclarationComponent) },
+    {
+        path: 'definitions',
+        loadComponent: () => import('./pages/definitions/definitions').then(m => m.DefinitionsComponent),
+        children: [
+            { path: 'payment-methods', loadComponent: () => import('./pages/definitions/payment-methods/payment-methods').then(m => m.PaymentMethods) },
+            { path: 'sources', loadComponent: () => import('./pages/definitions/sources/sources').then(m => m.Sources) },
+            { path: 'taxpayers', loadComponent: () => import('./pages/definitions/taxpayers/taxpayers').then(m => m.Taxpayers) },
+            { path: 'tax-settings', loadComponent: () => import('./pages/definitions/tax-settings/tax-settings').then(m => m.TaxSettings) },
+            { path: '', redirectTo: 'payment-methods', pathMatch: 'full' }
+        ]
+    },
     { path: '**', redirectTo: '' }
 ];

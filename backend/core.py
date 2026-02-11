@@ -127,6 +127,24 @@ class TaxpayerService(BaseService):
             rows = conn.execute("SELECT * FROM taxpayers").fetchall()
             return [Taxpayer(**dict(row)) for row in rows]
 
+    def add_taxpayer(self, t: Taxpayer) -> int:
+        query = "INSERT INTO taxpayers (full_name) VALUES (?)"
+        with self.db.get_connection() as conn:
+            cursor = conn.execute(query, (t.full_name,))
+            conn.commit()
+            return cursor.lastrowid
+
+    def update_taxpayer(self, t: Taxpayer):
+        query = "UPDATE taxpayers SET full_name=? WHERE id=?"
+        with self.db.get_connection() as conn:
+            conn.execute(query, (t.full_name, t.id))
+            conn.commit()
+
+    def delete_taxpayer(self, t_id: int):
+        with self.db.get_connection() as conn:
+            conn.execute("DELETE FROM taxpayers WHERE id=?", (t_id,))
+            conn.commit()
+
 class SourceService(BaseService):
     def get_all(self) -> List[Source]:
         with self.db.get_connection() as conn:
@@ -138,11 +156,49 @@ class SourceService(BaseService):
             row = conn.execute("SELECT * FROM sources WHERE id=?", (source_id,)).fetchone()
             return Source(**dict(row)) if row else None
 
+    def add_source(self, s: Source) -> int:
+        query = """INSERT INTO sources (name, taxpayer_id, share_percentage, detail, default_amount, type, is_net, deduction_type)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
+        with self.db.get_connection() as conn:
+            cursor = conn.execute(query, (s.name, s.taxpayer_id, s.share_percentage, s.detail, s.default_amount, s.type, s.is_net, s.deduction_type))
+            conn.commit()
+            return cursor.lastrowid
+
+    def update_source(self, s: Source):
+        query = """UPDATE sources SET name=?, taxpayer_id=?, share_percentage=?, detail=?, default_amount=?, type=?, is_net=?, deduction_type=?
+                   WHERE id=?"""
+        with self.db.get_connection() as conn:
+            conn.execute(query, (s.name, s.taxpayer_id, s.share_percentage, s.detail, s.default_amount, s.type, s.is_net, s.deduction_type, s.id))
+            conn.commit()
+
+    def delete_source(self, s_id: int):
+        with self.db.get_connection() as conn:
+            conn.execute("DELETE FROM sources WHERE id=?", (s_id,))
+            conn.commit()
+
 class PaymentMethodService(BaseService):
     def get_all(self) -> List[PaymentMethod]:
         with self.db.get_connection() as conn:
             rows = conn.execute("SELECT * FROM payment_methods").fetchall()
             return [PaymentMethod(**dict(row)) for row in rows]
+
+    def add_payment_method(self, pm: PaymentMethod) -> int:
+        query = "INSERT INTO payment_methods (method_name) VALUES (?)"
+        with self.db.get_connection() as conn:
+            cursor = conn.execute(query, (pm.method_name,))
+            conn.commit()
+            return cursor.lastrowid
+
+    def update_payment_method(self, pm: PaymentMethod):
+        query = "UPDATE payment_methods SET method_name=? WHERE id=?"
+        with self.db.get_connection() as conn:
+            conn.execute(query, (pm.method_name, pm.id))
+            conn.commit()
+
+    def delete_payment_method(self, pm_id: int):
+        with self.db.get_connection() as conn:
+            conn.execute("DELETE FROM payment_methods WHERE id=?", (pm_id,))
+            conn.commit()
 
 class DocumentService(BaseService):
     def add_document(self, d: Document) -> int:

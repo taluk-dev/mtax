@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 
 # core.py içerisindeki mevcut servisleri kullanıyoruz
-from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, DeclarationService, TaxSettingService, Transaction, Document, Declaration, TaxSetting
+from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, DeclarationService, TaxSettingService, Transaction, Document, Declaration, TaxSetting, Taxpayer, Source, PaymentMethod
 
 app = FastAPI(title="mTax API", version="2.0.0")
 
@@ -30,6 +30,22 @@ dec_service = DeclarationService(db)
 ts_service = TaxSettingService(db)
 
 # --- SCHEMAS (Pydantic models for API) ---
+class TaxpayerIn(BaseModel):
+    full_name: str
+
+class PaymentMethodIn(BaseModel):
+    method_name: str
+
+class SourceIn(BaseModel):
+    name: str
+    taxpayer_id: int
+    share_percentage: float = 1.0
+    detail: Optional[str] = None
+    default_amount: Optional[float] = None
+    type: int = 0
+    is_net: int = 0
+    deduction_type: int = 0
+
 class TransactionIn(BaseModel):
     taxpayer_id: int
     transaction_date: date
@@ -138,6 +154,97 @@ async def get_transactions(
         "transactions": txs,
         "summary": summary
     }
+
+    return {
+        "transactions": txs,
+        "summary": summary
+    }
+
+# --- Taxpayer Endpoints ---
+@app.get("/taxpayers")
+async def get_taxpayers():
+    return tp_service.get_all()
+
+@app.post("/taxpayers")
+async def add_taxpayer(t: TaxpayerIn):
+    new_tp = Taxpayer(id=None, full_name=t.full_name)
+    tp_id = tp_service.add_taxpayer(new_tp)
+    return {"id": tp_id}
+
+@app.put("/taxpayers/{tp_id}")
+async def update_taxpayer(tp_id: int, t: TaxpayerIn):
+    up_tp = Taxpayer(id=tp_id, full_name=t.full_name)
+    tp_service.update_taxpayer(up_tp)
+    return {"status": "updated"}
+
+@app.delete("/taxpayers/{tp_id}")
+async def delete_taxpayer(tp_id: int):
+    tp_service.delete_taxpayer(tp_id)
+    return {"status": "deleted"}
+
+# --- Source Endpoints ---
+@app.get("/sources")
+async def get_sources():
+    return src_service.get_all()
+
+@app.post("/sources")
+async def add_source(s: SourceIn):
+    new_src = Source(
+        id=None,
+        name=s.name,
+        taxpayer_id=s.taxpayer_id,
+        share_percentage=s.share_percentage,
+        detail=s.detail,
+        default_amount=s.default_amount,
+        type=s.type,
+        is_net=s.is_net,
+        deduction_type=s.deduction_type
+    )
+    src_id = src_service.add_source(new_src)
+    return {"id": src_id}
+
+@app.put("/sources/{s_id}")
+async def update_source(s_id: int, s: SourceIn):
+    up_src = Source(
+        id=s_id,
+        name=s.name,
+        taxpayer_id=s.taxpayer_id,
+        share_percentage=s.share_percentage,
+        detail=s.detail,
+        default_amount=s.default_amount,
+        type=s.type,
+        is_net=s.is_net,
+        deduction_type=s.deduction_type
+    )
+    src_service.update_source(up_src)
+    return {"status": "updated"}
+
+@app.delete("/sources/{s_id}")
+async def delete_source(s_id: int):
+    src_service.delete_source(s_id)
+    return {"status": "deleted"}
+
+# --- PaymentMethod Endpoints ---
+@app.get("/payment-methods")
+async def get_payment_methods():
+    return pm_service.get_all()
+
+@app.post("/payment-methods")
+async def add_payment_method(pm: PaymentMethodIn):
+    new_pm = PaymentMethod(id=None, method_name=pm.method_name)
+    pm_id = pm_service.add_payment_method(new_pm)
+    return {"id": pm_id}
+
+@app.put("/payment-methods/{pm_id}")
+async def update_payment_method(pm_id: int, pm: PaymentMethodIn):
+    up_pm = PaymentMethod(id=pm_id, method_name=pm.method_name)
+    pm_service.update_payment_method(up_pm)
+    return {"status": "updated"}
+
+@app.delete("/payment-methods/{pm_id}")
+async def delete_payment_method(pm_id: int):
+    pm_service.delete_payment_method(pm_id)
+    return {"status": "deleted"}
 
 @app.post("/transactions")
 async def add_transaction(tx: TransactionIn):
