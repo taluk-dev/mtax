@@ -349,7 +349,8 @@ class DeclarationService(BaseService):
         tx_service = TransactionService(self.db)
         src_service = SourceService(self.db)
         # Fetch all income and expenses for this taxpayer/year
-        transactions = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id)
+        # IMPORTANT: Only include IS_TAXABLE=True transactions
+        transactions = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id, is_taxable=True)
         
         # 3. Income Calculation (Gross Up)
         total_income = 0.0
