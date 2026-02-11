@@ -18,7 +18,11 @@
                                     Kayıt</span>
                                 <span
                                     class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-                                    Toplam: {{filteredTotalAmount() | number:'1.2-2'}} TL
+                                    Vergiye Tabi: {{filteredTotalAmount() | number:'1.2-2'}} TL
+                                </span>
+                                <span *ngIf="nonTaxableTotal() !== 0"
+                                    class="bg-slate-50 text-slate-500 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-slate-200">
+                                    Beyan Dışı: {{nonTaxableTotal() | number:'1.2-2'}} TL
                                 </span>
                             </div>
                             <mat-icon class="text-indigo-600 cursor-pointer ml-3 hover:scale-110 transition-all"

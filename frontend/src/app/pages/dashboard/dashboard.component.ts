@@ -116,9 +116,21 @@ export class DashboardComponent implements OnInit {
     });
 
     filteredTotalAmount = computed(() => {
-        return this.filteredTransactions().reduce((acc, tx) => {
-            return acc + (tx.type === 1 ? tx.amount : -tx.amount);
-        }, 0);
+        // Only return sum of TAXABLE items for the main total
+        return this.filteredTransactions()
+            .filter(tx => tx.is_taxable)
+            .reduce((acc, tx) => {
+                return acc + (tx.type === 1 ? tx.amount : -tx.amount);
+            }, 0);
+    });
+
+    nonTaxableTotal = computed(() => {
+        // Return sum of NON-TAXABLE items
+        return this.filteredTransactions()
+            .filter(tx => !tx.is_taxable)
+            .reduce((acc, tx) => {
+                return acc + (tx.type === 1 ? tx.amount : -tx.amount);
+            }, 0);
     });
 
     displayedColumns: string[] = ['id', 'date', 'taxpayer', 'source', 'type', 'is_taxable', 'tax_item_code', 'amount', 'actions'];
