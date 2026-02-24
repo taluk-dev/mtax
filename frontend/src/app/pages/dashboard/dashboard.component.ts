@@ -225,6 +225,16 @@ export class DashboardComponent implements OnInit {
         });
     }
 
+    selectAllSources(event?: Event) {
+        if (event) event.stopPropagation();
+        this.updateFilter('source_id', this.metadata().sources.map(s => s.id));
+    }
+
+    clearAllSources(event?: Event) {
+        if (event) event.stopPropagation();
+        this.updateFilter('source_id', []);
+    }
+
     isFilterActive(key: string): boolean {
         const f = this.filters();
         if (key === 'month') return f.month !== 'all';
