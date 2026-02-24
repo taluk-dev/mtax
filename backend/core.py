@@ -411,6 +411,8 @@ class DeclarationService(BaseService):
         # 3. Income Calculation (Gross Up)
         total_income = 0.0
         total_withholding = 0.0
+        total_mesken_income = 0.0
+        total_isyeri_income = 0.0
         
         # Helper to group by source
         source_incomes = {} # source_id -> amount
@@ -430,8 +432,10 @@ class DeclarationService(BaseService):
                 withholding = gross - amount
                 total_income += gross
                 total_withholding += withholding
+                total_isyeri_income += gross # is_net = 1 -> İş Yeri
             else:
                 total_income += amount
+                total_mesken_income += amount # is_net = 0 -> Mesken
 
         # 4. Exemption
         exemption = settings.exemption_amount
@@ -441,12 +445,17 @@ class DeclarationService(BaseService):
         if settings.exemption_limit > 0 and total_income > settings.exemption_limit:
             exemption = 0.0
 
-        # Simplified: Apply exemption
-        taxable_income_after_exemption = total_income - exemption
-        if taxable_income_after_exemption < 0: taxable_income_after_exemption = 0
-
+        # Apply exemption to mesken income (exemption cannot exceed mesken income technically)
+        exemption = min(exemption, total_mesken_income)
+        mesken_income_after_exemption = max(0, total_mesken_income - exemption)
+        isyeri_income_after_exemption = total_isyeri_income
+        
+        taxable_income_after_exemption = mesken_income_after_exemption + isyeri_income_after_exemption
+        
         # 5. Safi Irat (Expense Deduction)
         total_general_expenses = 0.0
+        total_mesken_expense = 0.0
+        total_isyeri_expense = 0.0
         
         # Find Actual Expenses (Type 0)
         for t in transactions:
@@ -454,6 +463,10 @@ class DeclarationService(BaseService):
                 src = sources_map.get(t['source_id'])
                 if src and src.deduction_type == 0:
                     total_general_expenses += t['amount']
+                    if src.is_net == 1:
+                        total_isyeri_expense += t['amount']
+                    else:
+                        total_mesken_expense += t['amount']
 
         deductible_expense = 0.0
         expense_ratio = 1.0
@@ -461,11 +474,19 @@ class DeclarationService(BaseService):
         if method == 'lump_sum':
             deductible_expense = taxable_income_after_exemption * settings.lump_sum_rate
         elif method == 'actual':
-            if total_income > 0:
-                expense_ratio = taxable_income_after_exemption / total_income
+            if total_mesken_income > 0:
+                mesken_expense_ratio = mesken_income_after_exemption / total_mesken_income
+            else:
+                mesken_expense_ratio = 0
+                
+            deductible_mesken_expense = total_mesken_expense * mesken_expense_ratio
+            deductible_isyeri_expense = total_isyeri_expense # İş Yeri is fully deductible
+            
+            deductible_expense = deductible_mesken_expense + deductible_isyeri_expense
+            if total_general_expenses > 0:
+                expense_ratio = deductible_expense / total_general_expenses
             else:
                 expense_ratio = 0
-            deductible_expense = total_general_expenses * expense_ratio
 
         safi_irat = taxable_income_after_exemption - deductible_expense
         if safi_irat < 0: safi_irat = 0
