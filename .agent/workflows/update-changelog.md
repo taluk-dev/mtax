@@ -1,16 +1,16 @@
 ---
-description: Projede önemli değişiklikler (şema, yeni özellik, hata çözümü vb.) yapıldığında veya oturum sonunda CHANGELOG.md dosyasını güncelle.
+description: Update the CHANGELOG.md file at the end of a session or when significant changes (schema, new features, bug fixes, etc.) have been made.
 ---
 
-Bu workflow, ajan (agent) tarafından proje kök dizinindeki `CHANGELOG.md` dosyasına oturum içindeki yeni özellikleri eklemek için kullanılmalıdır.
+This workflow should be used by the agent to document new features and changes inside the root `CHANGELOG.md` file during or at the end of a session.
 
-1. Proje ana dizininde yer alan `CHANGELOG.md` dosyasını `view_file` ile oku.
-2. Oturum boyunca yapılan tüm kayda değer değişiklikleri incele.
-3. [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) standardına uygun olarak değişiklikleri kategoriye ayır:
-   - `Added` (Yeni özellikler)
-   - `Changed` (Mevcut fonksiyonalite değişiklikleri)
-   - `Deprecated` (Kullanımdan kalkacak özellikler)
-   - `Removed` (Kaldırılmış olan özellikler)
-   - `Fixed` (Hata ve bug düzeltmeleri)
-   - `Security` (Güvenlik iyileştirmeleri)
-4. Dosyanın içeriğini, `[Unreleased]` başlığı altında yer alan ilgili kategorilere (örneğin `### Added` veya `### Changed`) eklemeler yapacak şekilde, `multi_replace_file_content` veya `replace_file_content` gibi uygun tool'lar kullanarak kalıcı olarak güncelle.
+1. Read the `CHANGELOG.md` file located in the project's root directory using the `view_file` tool.
+2. Review all notable changes made throughout the session.
+3. Categorize the changes in accordance with the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) standard:
+   - `Added` (For new features)
+   - `Changed` (For changes in existing functionality)
+   - `Deprecated` (For soon-to-be removed features)
+   - `Removed` (For now removed features)
+   - `Fixed` (For any bug fixes)
+   - `Security` (In case of vulnerabilities)
+4. Permanently update the file's content under the appropriate category headers (e.g., `### Added` or `### Changed`) within the `[Unreleased]` section using tools like `multi_replace_file_content` or `replace_file_content`.

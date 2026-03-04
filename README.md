@@ -84,7 +84,9 @@ mtax/
     -   **Exemption Handling:** Automatically applies residential exemption logic.
     -   **Expense Allocation:** Supports both lump-sum (15%) and actual expense methods (with proportional deduction logic: `Taxable / Total Income`).
     -   **Special Deductions:** Auto-fetches flagged expenses (e.g., Health, Education) from the DB and applies a 10% cap based on Safi İrat.
-- **Data Integrity:** `source_id` is mandatory. Added `is_net` and `deduction_type` columns to `sources` to support advanced tax calculations. New tables `tax_settings` and `declarations` store configuration and history.
+- **Data Integrity:** `source_id` is mandatory. Added `is_net` and `deduction_type` columns to `sources` to support advanced tax calculations. 
+    - **Tables:** New tables `tax_settings` and `declarations` store configuration and history.
+    - **Tax Items:** Structured standalone `tax_items` table fully integrated with `transactions` via `tax_items_id` foreign key for cleaner relationships.
 
 ---
 *Developed with focus on performance, aesthetics, and modern web standards.*
