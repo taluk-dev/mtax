@@ -24,6 +24,12 @@ export interface PaymentMethod {
     method_name: string;
 }
 
+export interface TaxItem {
+    id: number;
+    code: string;
+    name: string;
+}
+
 export interface Transaction {
     id?: number;
     taxpayer_id: number;
@@ -38,7 +44,9 @@ export interface Transaction {
     description?: string;
     document_id?: number;
     is_taxable: boolean;
+    tax_items_id?: number | null;
     tax_item_code?: string;
+    tax_item_name?: string;
     taxpayer_name?: string;
     source_name?: string;
     method_name?: string;

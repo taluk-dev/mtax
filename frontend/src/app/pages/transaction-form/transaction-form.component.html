@@ -107,8 +107,13 @@
                 <!-- Referans Bilgileri: Vergi Kodu ve GDrive -->
                 <div class="col-span-1">
                     <mat-form-field appearance="outline" class="w-full">
-                        <mat-label>Vergi Kalem Kodu</mat-label>
-                        <input matInput [(ngModel)]="formTx.tax_item_code" maxlength="10">
+                        <mat-label>Vergi Kalemi</mat-label>
+                        <mat-select [(ngModel)]="formTx.tax_items_id">
+                            <mat-option [value]="null">Seçiniz (Boş)</mat-option>
+                            <mat-option *ngFor="let item of metadata().tax_items" [value]="item.id">
+                                {{item.code}} - {{item.name}}
+                            </mat-option>
+                        </mat-select>
                         <mat-icon matPrefix>code</mat-icon>
                     </mat-form-field>
                 </div>

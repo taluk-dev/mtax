@@ -52,6 +52,16 @@ class Document:
         return os.path.join(DOCS_ROOT, self.relative_path)
 
 @dataclass
+class TaxItem:
+    id: int
+    code: str
+    name: str
+
+    @property
+    def full_local_path(self) -> str:
+        return os.path.join(DOCS_ROOT, self.relative_path)
+
+@dataclass
 class Transaction:
     id: Optional[int]
     taxpayer_id: int
@@ -66,7 +76,7 @@ class Transaction:
     amount: float
     description: Optional[str] = None
     is_taxable: bool = False
-    tax_item_code: Optional[str] = None
+    tax_items_id: Optional[int] = None
     gdrive_id: Optional[str] = None
 
 @dataclass
@@ -214,13 +224,19 @@ class DocumentService(BaseService):
             rows = conn.execute("SELECT * FROM documents").fetchall()
             return [Document(**dict(row)) for row in rows]
 
+class TaxItemService(BaseService):
+    def get_all(self) -> List[TaxItem]:
+        with self.db.get_connection() as conn:
+            rows = conn.execute("SELECT * FROM tax_items ORDER BY code ASC").fetchall()
+            return [TaxItem(**dict(row)) for row in rows]
+
 class TransactionService(BaseService):
     def add_transaction(self, t: Transaction):
         query = """INSERT INTO transactions (taxpayer_id, transaction_date, year, month, day, type, source_id, 
-                   payment_method_id, document_id, amount, description, is_taxable, tax_item_code, gdrive_id)
+                   payment_method_id, document_id, amount, description, is_taxable, tax_items_id, gdrive_id)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
         params = (t.taxpayer_id, t.transaction_date, t.year, t.month, t.day, t.type, t.source_id, 
-                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code, t.gdrive_id)
+                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_items_id, t.gdrive_id)
         with self.db.get_connection() as conn:
             conn.execute(query, params)
             conn.commit()
@@ -228,9 +244,9 @@ class TransactionService(BaseService):
     def update_transaction(self, t: Transaction):
         query = """UPDATE transactions SET taxpayer_id=?, transaction_date=?, year=?, month=?, day=?, type=?, 
                    source_id=?, payment_method_id=?, document_id=?, amount=?, description=?, is_taxable=?, 
-                   tax_item_code=?, gdrive_id=? WHERE id=?"""
+                   tax_items_id=?, gdrive_id=? WHERE id=?"""
         params = (t.taxpayer_id, t.transaction_date, t.year, t.month, t.day, t.type, t.source_id, 
-                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_item_code, t.gdrive_id, t.id)
+                  t.payment_method_id, t.document_id, t.amount, t.description, t.is_taxable, t.tax_items_id, t.gdrive_id, t.id)
         with self.db.get_connection() as conn:
             conn.execute(query, params)
             conn.commit()
@@ -243,7 +259,11 @@ class TransactionService(BaseService):
     def get_transaction(self, t_id: int) -> Optional[Transaction]:
         with self.db.get_connection() as conn:
             row = conn.execute("SELECT * FROM transactions WHERE id=?", (t_id,)).fetchone()
-            return Transaction(**dict(row)) if row else None
+            if row:
+                d = dict(row)
+                d.pop('tax_item_code', None)  # Prevent mapping error from deprecated column
+                return Transaction(**d)
+            return None
 
     def get_last_year(self) -> int:
         query = "SELECT MAX(year) as last_year FROM transactions"
@@ -266,12 +286,13 @@ class TransactionService(BaseService):
 
     def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
         query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, s.deduction_type, pm.method_name,
-                          d.doc_ref, d.display_name as doc_name, d.relative_path
+                          d.doc_ref, d.display_name as doc_name, d.relative_path, ti.code as tax_item_code, ti.name as tax_item_name
                    FROM transactions t
                    LEFT JOIN taxpayers tp ON t.taxpayer_id = tp.id
                    LEFT JOIN sources s ON t.source_id = s.id
                    LEFT JOIN payment_methods pm ON t.payment_method_id = pm.id
                    LEFT JOIN documents d ON t.document_id = d.id
+                   LEFT JOIN tax_items ti ON t.tax_items_id = ti.id
                    WHERE 1=1"""
         params = []
         if year:

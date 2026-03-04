@@ -62,12 +62,14 @@ export class DashboardComponent implements OnInit {
         taxpayers: any[],
         sources: any[],
         payment_methods: any[],
+        tax_items: any[],
         last_year: number,
         years: number[]
     }>({
         taxpayers: [],
         sources: [],
         payment_methods: [],
+        tax_items: [],
         last_year: new Date().getFullYear(),
         years: []
     });
@@ -167,7 +169,8 @@ export class DashboardComponent implements OnInit {
             payment_method_id: 1,
             amount: 0,
             description: '',
-            is_taxable: true
+            is_taxable: true,
+            tax_items_id: null
         };
     }
 

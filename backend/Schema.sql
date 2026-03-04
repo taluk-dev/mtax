@@ -59,6 +59,12 @@ CREATE TABLE IF NOT EXISTS "documents" (
 	"created_at"	DATETIME DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY("id" AUTOINCREMENT)
 );
+CREATE TABLE IF NOT EXISTS "tax_items" (
+	"id"	INTEGER NOT NULL,
+	"code"	TEXT NOT NULL,
+	"name"	TEXT NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT)
+);
 CREATE TABLE IF NOT EXISTS "transactions" (
 	"id"	INTEGER,
 	"taxpayer_id"	INTEGER,
@@ -73,12 +79,13 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	"description"	TEXT,
 	"amount"	REAL NOT NULL,
 	"is_taxable"	BOOLEAN DEFAULT FALSE,
-	"tax_item_code"	TEXT,
+	"tax_items_id"	INTEGER,
 	"gdrive_id"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("payment_method_id") REFERENCES "payment_methods"("id"),
 	FOREIGN KEY("source_id") REFERENCES "sources"("id"),
 	FOREIGN KEY("taxpayer_id") REFERENCES "taxpayers"("id"),
-	FOREIGN KEY("document_id") REFERENCES "documents"("id")
+	FOREIGN KEY("document_id") REFERENCES "documents"("id"),
+	FOREIGN KEY("tax_items_id") REFERENCES "tax_items"("id")
 );
 COMMIT;

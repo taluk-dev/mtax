@@ -36,7 +36,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 })
 export class TransactionFormComponent implements OnInit {
     loading = signal(false);
-    metadata = signal<any>({ taxpayers: [], sources: [], payment_methods: [] });
+    metadata = signal<any>({ taxpayers: [], sources: [], payment_methods: [], tax_items: [] });
 
     formTx: Transaction = this.initForm();
     isEdit = false;
@@ -107,7 +107,7 @@ export class TransactionFormComponent implements OnInit {
             amount: 0,
             description: '',
             is_taxable: true,
-            tax_item_code: ''
+            tax_items_id: null
         };
     }
 

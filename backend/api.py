@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import uvicorn
 
 # core.py içerisindeki mevcut servisleri kullanıyoruz
-from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, DeclarationService, TaxSettingService, Transaction, Document, Declaration, TaxSetting, Taxpayer, Source, PaymentMethod
+from core import Database, TaxpayerService, SourceService, TransactionService, PaymentMethodService, DocumentService, DeclarationService, TaxSettingService, TaxItemService, Transaction, Document, Declaration, TaxSetting, Taxpayer, Source, PaymentMethod, TaxItem
 
 app = FastAPI(title="mTax API", version="2.0.0")
 
@@ -28,6 +28,7 @@ pm_service = PaymentMethodService(db)
 doc_service = DocumentService(db)
 dec_service = DeclarationService(db)
 ts_service = TaxSettingService(db)
+ti_service = TaxItemService(db)
 
 # --- SCHEMAS (Pydantic models for API) ---
 class TaxpayerIn(BaseModel):
@@ -59,7 +60,7 @@ class TransactionIn(BaseModel):
     description: Optional[str] = None
     document_id: Optional[int] = None
     is_taxable: bool = False
-    tax_item_code: Optional[str] = None
+    tax_items_id: Optional[int] = None
     gdrive_id: Optional[str] = None
 
     @model_validator(mode='before')
@@ -135,6 +136,7 @@ async def get_metadata():
         "taxpayers": tp_service.get_all(),
         "sources": src_service.get_all(),
         "payment_methods": pm_service.get_all(),
+        "tax_items": ti_service.get_all(),
         "last_year": tx_service.get_last_year(),
         "years": tx_service.get_years()
     }
@@ -263,7 +265,7 @@ async def add_transaction(tx: TransactionIn):
         amount=tx.amount,
         description=tx.description,
         is_taxable=tx.is_taxable,
-        tax_item_code=tx.tax_item_code,
+        tax_items_id=tx.tax_items_id,
         gdrive_id=tx.gdrive_id
     )
     tx_service.add_transaction(new_tx)
@@ -285,7 +287,7 @@ async def update_transaction(tx_id: int, tx: TransactionIn):
         amount=tx.amount,
         description=tx.description,
         is_taxable=tx.is_taxable,
-        tax_item_code=tx.tax_item_code,
+        tax_items_id=tx.tax_items_id,
         gdrive_id=tx.gdrive_id
     )
     tx_service.update_transaction(up_tx)
