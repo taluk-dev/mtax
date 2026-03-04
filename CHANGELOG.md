@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-03-04
+
+### Added
+- Complete CRUD (Create, Read, Update, Delete) functionality for "Vergi Kalemleri" (Tax Items) under the Definitions section.
+- New `TaxItems` component and route (`/definitions/tax-items`) in the Frontend.
+- Corresponding Backend API endpoints (`POST`, `PUT`, `DELETE` /tax-items) and service methods in `core.py`.
+
 ## [2.2.0] - 2026-03-04
 
 ### Added
@@ -15,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Modified `transactions.tax_items_id` column to `NOT NULL` in `Schema.sql` to ensure data integrity.
 - Migrated existing `NULL` values in `transactions.tax_items_id` to a default value (8) and applied the schema constraint to the database.
 - Simplified "VERGİ KODU" filter dropdown to only display tax codes for a cleaner interface.
+
 
 ## [2.1.0] - 2026-03-04
 

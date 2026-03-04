@@ -15,6 +15,7 @@ export class DefinitionsComponent {
     { label: 'Ödeme Yöntemleri', path: 'payment-methods' },
     { label: 'Gelir/Gider Kaynakları', path: 'sources' },
     { label: 'Mükellefler', path: 'taxpayers' },
+    { label: 'Vergi Kalemleri', path: 'tax-items' },
     { label: 'Vergi Ayarları', path: 'tax-settings' },
   ];
 }

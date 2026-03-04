@@ -230,6 +230,24 @@ class TaxItemService(BaseService):
             rows = conn.execute("SELECT * FROM tax_items ORDER BY code ASC").fetchall()
             return [TaxItem(**dict(row)) for row in rows]
 
+    def add_tax_item(self, ti: TaxItem) -> int:
+        query = "INSERT INTO tax_items (code, name) VALUES (?, ?)"
+        with self.db.get_connection() as conn:
+            cursor = conn.execute(query, (ti.code, ti.name))
+            conn.commit()
+            return cursor.lastrowid
+
+    def update_tax_item(self, ti: TaxItem):
+        query = "UPDATE tax_items SET code=?, name=? WHERE id=?"
+        with self.db.get_connection() as conn:
+            conn.execute(query, (ti.code, ti.name, ti.id))
+            conn.commit()
+
+    def delete_tax_item(self, ti_id: int):
+        with self.db.get_connection() as conn:
+            conn.execute("DELETE FROM tax_items WHERE id=?", (ti_id,))
+            conn.commit()
+
 class TransactionService(BaseService):
     def add_transaction(self, t: Transaction):
         query = """INSERT INTO transactions (taxpayer_id, transaction_date, year, month, day, type, source_id, 

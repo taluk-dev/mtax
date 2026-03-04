@@ -102,6 +102,10 @@ class TaxSettingIn(BaseModel):
     withholding_rate: float
     tax_brackets: str # JSON
 
+class TaxItemIn(BaseModel):
+    code: str
+    name: str
+
 class SpecialDeductionIn(BaseModel):
     name: str # e.g. "Health", "Education"
     amount: float
@@ -220,6 +224,28 @@ async def update_source(s_id: int, s: SourceIn):
 @app.delete("/sources/{s_id}")
 async def delete_source(s_id: int):
     src_service.delete_source(s_id)
+    return {"status": "deleted"}
+
+# --- Tax Item Endpoints ---
+@app.get("/tax-items")
+async def get_tax_items():
+    return ti_service.get_all()
+
+@app.post("/tax-items")
+async def add_tax_item(ti: TaxItemIn):
+    new_ti = TaxItem(id=None, code=ti.code, name=ti.name)
+    ti_id = ti_service.add_tax_item(new_ti)
+    return {"id": ti_id}
+
+@app.put("/tax-items/{ti_id}")
+async def update_tax_item(ti_id: int, ti: TaxItemIn):
+    up_ti = TaxItem(id=ti_id, code=ti.code, name=ti.name)
+    ti_service.update_tax_item(up_ti)
+    return {"status": "updated"}
+
+@app.delete("/tax-items/{ti_id}")
+async def delete_tax_item(ti_id: int):
+    ti_service.delete_tax_item(ti_id)
     return {"status": "deleted"}
 
 # --- PaymentMethod Endpoints ---

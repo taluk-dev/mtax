@@ -227,4 +227,21 @@ export class ApiService {
     getDeclarations(taxpayerId: number, year: number): Observable<Declaration[]> {
         return this.http.get<Declaration[]>(`${this.apiUrl}/declarations/list/${taxpayerId}/${year}`);
     }
+
+    // --- Tax Items ---
+    getTaxItems(): Observable<TaxItem[]> {
+        return this.http.get<TaxItem[]>(`${this.apiUrl}/tax-items`);
+    }
+
+    addTaxItem(ti: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/tax-items`, ti);
+    }
+
+    updateTaxItem(id: number, ti: any): Observable<any> {
+        return this.http.put(`${this.apiUrl}/tax-items/${id}`, ti);
+    }
+
+    deleteTaxItem(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/tax-items/${id}`);
+    }
 }
