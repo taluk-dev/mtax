@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-03-04
+
+### Added
+- Added metadata-driven filtering for "VERGİ KODU" (Tax Item Code) column in the Dashboard transaction table.
+- Backend support for filtering by `tax_items_id` in `get_transactions` and `get_summary` methods.
+
+### Changed
+- Modified `transactions.tax_items_id` column to `NOT NULL` in `Schema.sql` to ensure data integrity.
+- Migrated existing `NULL` values in `transactions.tax_items_id` to a default value (8) and applied the schema constraint to the database.
+- Simplified "VERGİ KODU" filter dropdown to only display tax codes for a cleaner interface.
+
 ## [2.1.0] - 2026-03-04
 
 ### Added
@@ -19,3 +30,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Dropped the deprecated `tax_item_code` column from the `transactions` SQLite table to prevent data duplication.
+
+

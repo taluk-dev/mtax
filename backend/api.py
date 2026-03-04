@@ -148,15 +148,11 @@ async def get_transactions(
     type: Optional[int] = Query(None),
     month: Optional[int] = Query(None),
     source_id: Optional[List[int]] = Query(None),
-    is_taxable: Optional[bool] = Query(None)
+    is_taxable: Optional[bool] = Query(None),
+    tax_items_id: Optional[int] = Query(None)
 ):
-    txs = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable)
-    summary = tx_service.get_summary(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable)
-    return {
-        "transactions": txs,
-        "summary": summary
-    }
-
+    txs = tx_service.get_transactions(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable, tax_items_id=tax_items_id)
+    summary = tx_service.get_summary(year=year, taxpayer_id=taxpayer_id, transaction_type=type, month=month, source_id=source_id, is_taxable=is_taxable, tax_items_id=tax_items_id)
     return {
         "transactions": txs,
         "summary": summary

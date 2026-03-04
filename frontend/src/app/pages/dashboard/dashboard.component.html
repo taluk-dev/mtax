@@ -239,9 +239,23 @@
                             <ng-container matColumnDef="tax_item_code">
                                 <th mat-header-cell *matHeaderCellDef class="!py-4">
                                     <div class="header-cell-content items-center">
-                                        <span
-                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">VERGİ
-                                            KODU</span>
+                                        <span [matMenuTriggerFor]="taxItemMenu"
+                                            class="text-[10px] font-bold text-slate-400 uppercase tracking-widest cursor-pointer hover:text-indigo-600 transition-all flex items-center gap-1">
+                                            VERGİ KODU
+                                            <mat-icon [class.!text-indigo-600]="isFilterActive('tax_items_id')"
+                                                (click)="resetFilter('tax_items_id', $event)"
+                                                class="!text-[12px] !w-[12px] !h-[12px]">{{isFilterActive('tax_items_id')
+                                                ? 'filter_alt' : 'expand_more'}}</mat-icon>
+                                        </span>
+                                        <mat-menu #taxItemMenu="matMenu" class="compact-menu">
+                                            <button mat-menu-item
+                                                (click)="updateFilter('tax_items_id', 'all')">Tümü</button>
+                                            <button mat-menu-item *ngFor="let item of metadata().tax_items"
+                                                (click)="updateFilter('tax_items_id', item.id)">
+                                                <span
+                                                    class="font-mono text-[10px] bg-slate-100 px-1 py-0.5 rounded mr-2">{{item.code}}</span>
+                                            </button>
+                                        </mat-menu>
                                     </div>
                                 </th>
                                 <td mat-cell *matCellDef="let tx" class="text-center">

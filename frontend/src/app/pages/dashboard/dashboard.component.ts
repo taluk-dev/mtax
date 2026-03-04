@@ -80,7 +80,8 @@ export class DashboardComponent implements OnInit {
         taxpayer_id: 'all' as number | null | 'all',
         type: 'all' as number | null | 'all',
         source_id: [] as number[],
-        is_taxable: 'all' as boolean | null | 'all'
+        is_taxable: 'all' as boolean | null | 'all',
+        tax_items_id: 'all' as number | null | 'all'
     });
 
     searchTerm = signal('');
@@ -197,6 +198,7 @@ export class DashboardComponent implements OnInit {
             params.source_id = currentFilters.source_id;
         }
         if (currentFilters.is_taxable !== 'all' && currentFilters.is_taxable !== null) params.is_taxable = currentFilters.is_taxable;
+        if (currentFilters.tax_items_id !== 'all' && currentFilters.tax_items_id !== null) params.tax_items_id = currentFilters.tax_items_id;
 
         this.api.getDashboard(params).subscribe({
             next: (data) => {
@@ -245,6 +247,7 @@ export class DashboardComponent implements OnInit {
         if (key === 'taxpayer_id') return f.taxpayer_id !== 'all';
         if (key === 'type') return f.type !== 'all';
         if (key === 'is_taxable') return f.is_taxable !== 'all';
+        if (key === 'tax_items_id') return f.tax_items_id !== 'all';
         if (key === 'source_id') return f.source_id.length !== this.metadata().sources.length;
         return false;
     }
@@ -257,6 +260,7 @@ export class DashboardComponent implements OnInit {
             else if (key === 'taxpayer_id') this.updateFilter('taxpayer_id', 'all');
             else if (key === 'type') this.updateFilter('type', 'all');
             else if (key === 'is_taxable') this.updateFilter('is_taxable', 'all');
+            else if (key === 'tax_items_id') this.updateFilter('tax_items_id', 'all');
             else if (key === 'source_id') {
                 this.updateFilter('source_id', this.metadata().sources.map(s => s.id));
             }

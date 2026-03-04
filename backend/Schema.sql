@@ -79,7 +79,7 @@ CREATE TABLE IF NOT EXISTS "transactions" (
 	"description"	TEXT,
 	"amount"	REAL NOT NULL,
 	"is_taxable"	BOOLEAN DEFAULT FALSE,
-	"tax_items_id"	INTEGER,
+	"tax_items_id"	INTEGER NOT NULL,
 	"gdrive_id"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("payment_method_id") REFERENCES "payment_methods"("id"),

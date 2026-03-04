@@ -13,4 +13,4 @@ This workflow should be used by the agent to document new features and changes i
    - `Removed` (For now removed features)
    - `Fixed` (For any bug fixes)
    - `Security` (In case of vulnerabilities)
-4. Permanently update the file's content under the appropriate category headers (e.g., `### Added` or `### Changed`) within the `[Unreleased]` section using tools like `multi_replace_file_content` or `replace_file_content`.
+4. Permanently update the file's content under the appropriate category headers (e.g., `### Added` or `### Changed`) using the current session's version and date format (e.g., `## [2.1.0] - YYYY-MM-DD`) instead of using an `[Unreleased]` section. Ensure that duplicate headers are merged if updating the same version.

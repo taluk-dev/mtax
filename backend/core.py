@@ -284,7 +284,7 @@ class TransactionService(BaseService):
                 years = [datetime.now().year]
             return years
 
-    def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> List[Dict]:
+    def get_transactions(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None, tax_items_id=None) -> List[Dict]:
         query = """SELECT t.*, tp.full_name as taxpayer_name, s.name as source_name, s.deduction_type, pm.method_name,
                           d.doc_ref, d.display_name as doc_name, d.relative_path, ti.code as tax_item_code, ti.name as tax_item_name
                    FROM transactions t
@@ -313,14 +313,16 @@ class TransactionService(BaseService):
                 params.append(source_id)
         if is_taxable is not None:
             query += " AND t.is_taxable = ?"; params.append(1 if is_taxable else 0)
+        if tax_items_id:
+            query += " AND t.tax_items_id = ?"; params.append(tax_items_id)
         
         query += " ORDER BY t.transaction_date DESC, t.source_id ASC, t.id DESC"
         with self.db.get_connection() as conn:
             rows = conn.execute(query, params).fetchall()
             return [dict(row) for row in rows]
 
-    def get_summary(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None) -> Dict:
-        txs = self.get_transactions(year, taxpayer_id, transaction_type, month, source_id, is_taxable)
+    def get_summary(self, year=None, taxpayer_id=None, transaction_type=None, month=None, source_id=None, is_taxable=None, tax_items_id=None) -> Dict:
+        txs = self.get_transactions(year, taxpayer_id, transaction_type, month, source_id, is_taxable, tax_items_id)
         income = sum(t['amount'] for t in txs if t['type'] == TransactionType.INCOME)
         expense = sum(t['amount'] for t in txs if t['type'] == TransactionType.EXPENSE)
         taxable = sum(t['amount'] for t in txs if t['type'] == TransactionType.INCOME and t['is_taxable'])
