@@ -186,8 +186,24 @@ mat-card {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                padding: 2px 0;
+                padding: 4px 8px;
+                border-radius: 4px;
                 color: #64748b;
+                transition: background-color 0.2s ease, color 0.2s ease;
+                cursor: default;
+
+                &:hover {
+                    background-color: #fef9c3;
+                    /* Light yellow hue */
+                    color: #0f172a;
+                }
+
+                .code {
+                    font-family: 'Roboto Mono', monospace;
+                    width: 60px;
+                    text-align: left;
+                    font-weight: 600;
+                }
 
                 .rate {
                     font-weight: 700;

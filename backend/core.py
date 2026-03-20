@@ -499,15 +499,24 @@ class DeclarationService(BaseService):
         total_isyeri_expense = 0.0
         
         # Find Actual Expenses (Type 0)
+        actual_expenses_breakdown_dict = {}
         for t in transactions:
             if t['type'] == TransactionType.EXPENSE:
                 src = sources_map.get(t['source_id'])
                 if src and src.deduction_type == 0:
                     total_general_expenses += t['amount']
+                    
+                    ti_code = t.get('tax_item_code') or 'DİĞER'
+                    ti_name = t.get('tax_item_name') or 'Diğer Giderler'
+                    key = (ti_code, ti_name)
+                    actual_expenses_breakdown_dict[key] = actual_expenses_breakdown_dict.get(key, 0.0) + t['amount']
+                    
                     if src.is_net == 1:
                         total_isyeri_expense += t['amount']
                     else:
                         total_mesken_expense += t['amount']
+                        
+        actual_expenses_breakdown = [{"code": k[0], "name": k[1], "amount": v} for k, v in actual_expenses_breakdown_dict.items()]
 
         deductible_expense = 0.0
         expense_ratio = 1.0
@@ -562,6 +571,7 @@ class DeclarationService(BaseService):
             "matrah": matrah,
             "calculated_tax": calculated_tax,
             "tax_breakdown": tax_breakdown,
+            "actual_expenses_breakdown": actual_expenses_breakdown,
             "net_tax_to_pay": net_tax_to_pay,
             
             # Aliases for Declaration Interface / DB Saving

@@ -119,6 +119,19 @@
                         <td class="amount">{{ result()?.total_general_expenses_actual |
                             currency:'TRY':'symbol-narrow':'1.2-2' }}</td>
                     </tr>
+                    <tr *ngIf="result()?.expense_method === 'actual' && result()?.actual_expenses_breakdown?.length">
+                        <td colspan="2" class="breakdown-cell">
+                            <div class="breakdown-container">
+                                <span class="breakdown-title">Gider Kalemleri Detayı:</span>
+                                <div *ngFor="let b of result()?.actual_expenses_breakdown" class="breakdown-item"
+                                    [matTooltip]="b.name">
+                                    <span class="code">{{ b.code }}</span>
+                                    <mat-icon>arrow_right_alt</mat-icon>
+                                    <span class="tax">{{ b.amount | currency:'TRY':'symbol-narrow':'1.2-2' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
                     <tr *ngIf="result()?.expense_method === 'actual'">
                         <td>Gider İndirim Oranı:</td>
                         <td class="amount">%{{ (result()?.expense_ratio || 0) * 100 | number:'1.2-2' }}</td>

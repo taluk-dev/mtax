@@ -180,6 +180,8 @@ export class DeclarationComponent implements OnInit {
 
         const dec = {
             ...res,
+            taxpayer_id: this.selectedTaxpayerId()!,
+            year: this.selectedYear()!,
             name: this.form.get('declarationName')?.value || 'Taslak',
             status: status
         };

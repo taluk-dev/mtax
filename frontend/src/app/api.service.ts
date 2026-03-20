@@ -110,6 +110,7 @@ export interface Declaration {
     total_general_expenses_actual?: number;
     total_special_deductions?: number;
     tax_breakdown?: { rate: number, base: number, tax: number }[];
+    actual_expenses_breakdown?: { code: string, name: string, amount: number }[];
     matrah?: number;
 }
 

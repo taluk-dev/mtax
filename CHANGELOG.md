@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2026-03-20
+
+### Added
+- Added "Gider Kalemleri Detayı" (Actual Expenses Breakdown) sub-table in the "Hesaplama Sonucu" section when the "Gerçek Gider" method is toggled.
+- Implemented backend data grouping logic in `DeclarationService.calculate` within `core.py` to aggregate expenses by their `tax_items` identities and injected `actual_expenses_breakdown` into the response payload.
+
+### Changed
+- Improved the expense breakdown interface interactivity by adding a light-yellow hover highlight effect across breakdown rows.
+- Structured breakdown table components using a flexbox layout, adding a new fixed-width `.code` CSS class to horizontally align tax codes.
+- Relocated the `matTooltip` behavior to the parent wrapper in Angular to display the source's name across the entire row surface area.
+
+### Fixed
+- Fixed **422 Unprocessable Entity** regression error blocking "Taslak Kaydet" (Save Draft) network requests by ensuring `taxpayer_id` and `year` attributes are present in the component's generated payload object.
+
 ## [2.3.0] - 2026-03-04
 
 ### Added
