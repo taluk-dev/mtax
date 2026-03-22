@@ -402,5 +402,10 @@ async def get_special_deductions_api(taxpayer_id: int, year: int):
 async def list_declarations(taxpayer_id: int, year: int):
     return dec_service.get_declarations(taxpayer_id, year)
 
+@app.delete("/declarations/{dec_id}")
+async def delete_declaration(dec_id: int):
+    dec_service.delete_declaration(dec_id)
+    return {"status": "deleted"}
+
 if __name__ == "__main__":
     uvicorn.run("api:app", host="127.0.0.1", port=8000, reload=True)

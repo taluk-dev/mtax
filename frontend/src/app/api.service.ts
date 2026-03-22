@@ -229,6 +229,10 @@ export class ApiService {
         return this.http.get<Declaration[]>(`${this.apiUrl}/declarations/list/${taxpayerId}/${year}`);
     }
 
+    deleteDeclaration(id: number): Observable<any> {
+        return this.http.delete(`${this.apiUrl}/declarations/${id}`);
+    }
+
     // --- Tax Items ---
     getTaxItems(): Observable<TaxItem[]> {
         return this.http.get<TaxItem[]>(`${this.apiUrl}/tax-items`);

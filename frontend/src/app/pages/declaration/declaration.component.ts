@@ -204,4 +204,30 @@ export class DeclarationComponent implements OnInit {
         // If needed, we can update backend to store the JSON of deductions.
         this.snackBar.open('Kayıtlı beyanname yüklendi.', 'Tamam', { duration: 2000 });
     }
+
+    deleteDeclaration(dec: Declaration, event: Event) {
+        event.stopPropagation();
+        if (!dec.id) return;
+
+        if (confirm(`'${dec.name}' isimli beyannameyi silmek istediğinize emin misiniz? (Kesinleşmiş beyanlar da silinecektir.)`)) {
+            this.loading.set(true);
+            this.api.deleteDeclaration(dec.id).subscribe({
+                next: () => {
+                    this.snackBar.open('Beyanname başarıyla silindi.', 'Tamam', { duration: 3000 });
+                    if (this.selectedTaxpayerId() && this.selectedYear()) {
+                        this.loadDeclarations(this.selectedTaxpayerId()!, this.selectedYear()!);
+                    }
+                    if (this.result()?.id === dec.id) {
+                        this.result.set(null);
+                        this.form.patchValue({ declarationName: 'Taslak' });
+                    }
+                    this.loading.set(false);
+                },
+                error: (err) => {
+                    this.snackBar.open('Silme işlemi başarısız: ' + (err.error?.detail || 'Bilinmeyen hata'), 'Kapat');
+                    this.loading.set(false);
+                }
+            });
+        }
+    }
 }

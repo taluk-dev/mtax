@@ -33,7 +33,12 @@
                     <mat-list-item *ngFor="let d of declarations()" (click)="viewDeclaration(d)">
                         <span matListItemTitle>{{ d.name }}</span>
                         <span matListItemLine>{{ d.created_at | date:'short' }}</span>
-                        <span matListItemMeta>{{ d.net_tax_to_pay | currency:'TRY':'symbol-narrow':'1.0-2' }}</span>
+                        <span matListItemMeta class="meta-section">
+                            <span class="amount">{{ d.net_tax_to_pay | currency:'TRY':'symbol-narrow':'1.0-2' }}</span>
+                            <button mat-icon-button color="warn" (click)="deleteDeclaration(d, $event)" aria-label="Sil" matTooltip="Beyannameyi Sil">
+                                <mat-icon>delete</mat-icon>
+                            </button>
+                        </span>
                     </mat-list-item>
                     <p *ngIf="declarations().length === 0" class="no-data">Kayıtlı beyanname yok.</p>
                 </mat-list>

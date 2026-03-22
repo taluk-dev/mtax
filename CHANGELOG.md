@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [2.5.0] - 2026-03-22
+
+### Added
+- Implemented the ability to delete declarations directly from the "Geçmiş Beyannameler" list in the Declaration UI, including finalized declarations.
+- Created `DELETE /declarations/{dec_id}` API endpoint in the backend and integrated it into the frontend `ApiService`.
+- Integrated a delete button with a confirmation dialog into the `declaration.component.html` list items, along with `.meta-section` styling to align the net tax amount and the delete action button.
 
 ## [2.4.0] - 2026-03-20
 

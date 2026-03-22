@@ -403,6 +403,11 @@ class DeclarationService(BaseService):
         with self.db.get_connection() as conn:
             rows = conn.execute("SELECT * FROM declarations WHERE taxpayer_id=? AND year=?", (taxpayer_id, year)).fetchall()
             return [Declaration(**dict(row)) for row in rows]
+
+    def delete_declaration(self, dec_id: int):
+        with self.db.get_connection() as conn:
+            conn.execute("DELETE FROM declarations WHERE id=?", (dec_id,))
+            conn.commit()
     
     def calculate_tax_liability(self, tax_base: float, brackets: List[Dict]) -> Tuple[float, List[Dict]]:
         # Calculates progressive tax and returns (total_tax, breakdown)
